@@ -2,48 +2,50 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/EarthProfile.jpg"
-          alt="Next.js logo"
-          width={200}
-          height={50}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900 font-sans px-4">
+      <main className="flex flex-col items-center max-w-3xl w-full py-20 px-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg sm:flex-row sm:gap-20">
+        {/* Profile Image */}
+        <div className="flex-shrink-0">
+          <Image
+            className="rounded-full border-4 border-zinc-200 dark:border-zinc-700"
+            src="/EarthProfile.jpg"
+            alt="Ekaphat Seamthong"
+            width={180}
+            height={180}
+            priority
+          />
+        </div>
+
+        {/* Text Content */}
+        <div className="mt-8 sm:mt-0 flex flex-col gap-6 text-center sm:text-left">
+          <h1 className="text-4xl font-bold text-black dark:text-zinc-50">
             Ekaphat Seamthong
           </h1>
-          <p className="max-w-md text-lg leading-10 text-zinc-600 dark:text-zinc-400"> 
-            Experienced Software Development Engineer in Test with over 3+ years of experience, leading testing
-            operations for multiple mobile and web-based products. Managed both automated and manual testing
-            processes across various platforms to ensure seamless user experiences. Developed and executed
-            comprehensive functional testing and regression testing covering functionality, performance, and
-            usability. Utilized a wide range of tools and technologies to support test environments, CI/CD pipelines,
-            and issue troubleshooting. Collaborated closely with cross-functional teams, including developers,
-            product managers, and UX designers, to drive quality assurance and enhance overall product reliability
-            and release efficiency. Also experienced in mobile testing for both Android and iOS applications
+          <p className="text-zinc-700 dark:text-zinc-300 text-lg leading-relaxed">
+            Experienced Software Development Engineer in Test with 3+ years of experience,
+            leading testing operations for multiple mobile and web products. Skilled in automated
+            and manual testing, CI/CD pipelines, and cross-functional collaboration.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="www.linkedin.com/in/ekaphat"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            LinkedIn
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://github.com/earthekaphat"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            More
-          </a>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <a
+              className="px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+              href="https://www.linkedin.com/in/ekaphat/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              LinkedIn
+            </a>
+            <a
+              className="px-6 py-3 rounded-full border border-zinc-400 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition font-semibold"
+              href="https://github.com/earthekaphat"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+          </div>
         </div>
       </main>
     </div>
