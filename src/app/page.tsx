@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -21,13 +22,6 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-black dark:text-zinc-50">
             Ekaphat Seamthong
           </h1>
-          <p className="text-zinc-700 dark:text-zinc-300 text-lg leading-relaxed">
-            Experienced Software Development Engineer in Test with 3+ years of experience,
-            leading testing operations for multiple mobile and web products. Skilled in automated
-            and manual testing, CI/CD pipelines, and cross-functional collaboration.
-          </p>
-
-          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               className="px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
@@ -45,6 +39,21 @@ export default function Home() {
             >
               GitHub
             </a>
+          </div>
+          <p className="text-zinc-700 dark:text-zinc-300 text-lg leading-relaxed">
+            Experienced Software Development Engineer in Test with 3+ years of experience,
+            leading testing operations for multiple mobile and web products. Skilled in automated
+            and manual testing, CI/CD pipelines, and cross-functional collaboration.
+          </p>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              href="/about"
+              className="px-6 py-3 rounded-full border border-zinc-400 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition font-semibold"
+            >
+              About Me
+            </Link>
           </div>
         </div>
       </main>
