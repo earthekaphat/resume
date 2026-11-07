@@ -1,62 +1,102 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowIcon, SOCIAL_ICONS } from "./components/Icons";
+import { TiltCard } from "./components/TiltCard";
+import { Typer } from "./components/Typer";
+import { ROLES, SKILLS, SOCIALS } from "./data/site";
+import { TRIPS } from "./data/trips";
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900 font-sans px-4">
-      <main className="flex flex-col items-center max-w-3xl w-full py-20 px-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg sm:flex-row sm:gap-20">
-        {/* Profile Image */}
-        <div className="flex-shrink-0">
-          <Image
-            className="rounded-full border-4 border-zinc-200 dark:border-zinc-700"
-            src="/EarthProfile.jpg"
-            alt="Ekaphat Seamthong"
-            width={180}
-            height={180}
-            priority
-          />
-        </div>
+  const socials = SOCIALS.filter((s) => s.href);
 
-        {/* Text Content */}
-        <div className="mt-8 sm:mt-0 flex flex-col gap-6 text-center sm:text-left">
-          <h1 className="text-4xl font-bold text-black dark:text-zinc-50">
-            Ekaphat Seamthong
+  return (
+    <main className="page">
+      <section className="hero">
+        <TiltCard className="hero__photo">
+          <Image src="/EarthProfile.jpg" alt="Ekaphat Seamthong" width={260} height={260} priority />
+          <span className="badge-pass mono">✓ PASS</span>
+        </TiltCard>
+
+        <div className="hero__text">
+          <p className="eyebrow mono">
+            <span className="pulse" aria-hidden /> QA · automation · CI/CD
+          </p>
+          <h1 className="hero__name">
+            Ekaphat <span className="accent">Seamthong</span>
           </h1>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <a
-              className="px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-              href="https://www.linkedin.com/in/ekaphat/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              LinkedIn
-            </a>
-            <a
-              className="px-6 py-3 rounded-full border border-zinc-400 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition font-semibold"
-              href="https://github.com/earthekaphat"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-          </div>
-          <p className="text-zinc-700 dark:text-zinc-300 text-lg leading-relaxed">
-            Experienced Software Development Engineer in Test with 3+ years of experience,
-            leading testing operations for multiple mobile and web products. Skilled in automated
-            and manual testing, CI/CD pipelines, and cross-functional collaboration.
+          <p className="hero__role">
+            <Typer phrases={ROLES} />
+          </p>
+          <p className="hero__lead">
+            SDET with 3+ years of experience leading testing for mobile and web products. I build test automation,
+            keep CI/CD pipelines honest, and work closely with product and engineering teams.
           </p>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/about"
-              className="px-6 py-3 rounded-full border border-zinc-400 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition font-semibold"
-            >
-              About Me
-            </Link>
-          </div>
+          <ul className="socials" aria-label="Social links">
+            {socials.map((s) => {
+              const Icon = SOCIAL_ICONS[s.key];
+              return (
+                <li key={s.key}>
+                  <a className={`social social--${s.key}`} href={s.href} target="_blank" rel="noopener noreferrer">
+                    <Icon />
+                    <span>
+                      <b>{s.label}</b>
+                      {s.handle && <small className="mono">@{s.handle}</small>}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="report" aria-labelledby="skills-title">
+        <div className="report__head">
+          <h2 id="skills-title">Skills</h2>
+          <span className="mono muted">{SKILLS.length} passed · 0 failed</span>
+        </div>
+        <ul className="report__list">
+          {SKILLS.map((s, i) => (
+            <li key={s} style={{ animationDelay: `${i * 70}ms` }}>
+              <span className="tick mono" aria-hidden>
+                ✓
+              </span>
+              {s}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="tiles" aria-label="Tools">
+        <Link href="/random" className="tile tile--random">
+          <span className="tile__kicker mono">tool</span>
+          <h2>Random picker</h2>
+          <p>Add up to 10 choices, shuffle the cards and flip one.</p>
+          <span className="tile__deck" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="tile__go">
+            Open <ArrowIcon />
+          </span>
+        </Link>
+
+        <Link href="/trips" className="tile tile--trips">
+          <span className="tile__kicker mono">travel</span>
+          <h2>Trip plans</h2>
+          <p>
+            {TRIPS.length} plan{TRIPS.length === 1 ? "" : "s"} so far: {TRIPS.map((t) => t.city).join(", ")}. More coming.
+          </p>
+          <span className="tile__stamp mono" aria-hidden>
+            {TRIPS[0]?.city.toUpperCase()}
+          </span>
+          <span className="tile__go">
+            Open <ArrowIcon />
+          </span>
+        </Link>
+      </section>
+    </main>
   );
 }

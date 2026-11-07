@@ -14,7 +14,7 @@
 :root{
   --bg:#EEF2F5; --surface:#FFFFFF; --ink:#13202C; --muted:#5B6976; --line:#D3DBE2;
   --accent:#C8102E; --accent-ink:#FFFFFF;
-  --land:#E4E9E3; --water:#B9D3E6; --road:#FFFFFF; --maplabel:#4C5B68;
+  --land:#E4E9E3; --water:#B9D3E6; --road:#FFFFFF; --roadedge:#CBD3CC; --park:#CFE3C4; --maplabel:#4C5B68;
   --walk:#5B6976; --didi:#F07B1A; --maglev:#7A6CC9; --L2:#4FA62E; --L13:#D9779F; --L16:#2EA99A; --shuttle:#2F78C4;
   --chip:#EEF2F5; --amap:#1D6FE0;
   --f-display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
@@ -24,13 +24,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E151C; --surface:#151F29; --ink:#E5ECF2; --muted:#93A2B0; --line:#26333F;
   --accent:#FF4B5C; --accent-ink:#1A0508;
-  --land:#18232D; --water:#1B3550; --road:#22303C; --maplabel:#A9B7C4;
+  --land:#18232D; --water:#1B3550; --road:#2B3A48; --roadedge:#111A22; --park:#1D3328; --maplabel:#A9B7C4;
   --walk:#93A2B0; --didi:#FF9A45; --maglev:#A397F0; --L2:#7ACB57; --L13:#F09CC0; --L16:#4DD0BF; --shuttle:#5FA2EC;
   --chip:#1C2834; --amap:#5C9DFF; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E151C; --surface:#151F29; --ink:#E5ECF2; --muted:#93A2B0; --line:#26333F;
   --accent:#FF4B5C; --accent-ink:#1A0508;
-  --land:#18232D; --water:#1B3550; --road:#22303C; --maplabel:#A9B7C4;
+  --land:#18232D; --water:#1B3550; --road:#2B3A48; --roadedge:#111A22; --park:#1D3328; --maplabel:#A9B7C4;
   --walk:#93A2B0; --didi:#FF9A45; --maglev:#A397F0; --L2:#7ACB57; --L13:#F09CC0; --L16:#4DD0BF; --shuttle:#5FA2EC;
   --chip:#1C2834; --amap:#5C9DFF; color-scheme:dark}
 
@@ -108,6 +108,8 @@ h1{font:700 26px/1.15 var(--f-display);margin:6px 0 0;text-wrap:balance}
 
 /* map svg */
 .pinlabel{font:600 11.5px/1 var(--f-display);fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-width:3.5px;stroke-linejoin:round}
+.roadlabel{font:500 9.5px/1 var(--f-body);fill:var(--maplabel);paint-order:stroke;stroke:var(--road);stroke-width:3px;stroke-linejoin:round}
+.stationlabel{font:600 9.5px/1 var(--f-body);fill:var(--maplabel);paint-order:stroke;stroke:var(--land);stroke-width:3px;stroke-linejoin:round}
 .geolabel{font:500 10.5px/1 var(--f-body);fill:var(--maplabel);letter-spacing:.04em}
 .waterlabel{font:italic 500 10.5px/1 var(--f-body);fill:var(--maplabel);opacity:.85}
 .pin{cursor:pointer}
@@ -140,6 +142,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12.5px}
 </head>
 <body>
 <div class="wrap">
+<style>.backbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:14px}.backbar a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:600 13.5px/1 var(--f-body)}.backbar a:hover{border-color:var(--accent)}.backbar a.sub{color:var(--muted)}</style>
+<nav class="backbar" aria-label="กลับ"><a href="/">← หน้าหลัก</a><a class="sub" href="/trips">ทริปทั้งหมด</a><a class="sub" href="/shanghai-schedule.xlsx" download>ตาราง Excel ↓</a></nav>
+
   <header class="top">
     <div class="eyebrow">Shanghai · 2–7 Dec 2026 · Waiting Hotel Jing'an</div>
     <h1>แพลนเที่ยวเซี่ยงไฮ้</h1>
@@ -186,6 +191,28 @@ const SUZHOU=[[31.2447,121.4918],[31.2447,121.4880],[31.2446,121.4845],[31.2441,
 const SEA=[[31.42,121.30],[31.40,121.505],[31.37,121.57],[31.31,121.65],[31.25,121.74],[31.19,121.82],[31.12,121.86],[31.03,121.91],[30.95,121.95],[30.88,121.975],[30.855,121.93],[30.845,121.86],[30.85,121.76],[30.86,121.62],[30.83,121.50],[30.80,121.30],[30.60,121.30],[30.60,122.30],[31.60,122.30],[31.60,121.30]];
 const DISTRICTS=[[31.2245,121.4470,"JING'AN"],[31.2290,121.4840,"HUANGPU"],[31.2160,121.5400,"PUDONG"],[31.1950,121.4400,"XUHUI"],[31.2620,121.4890,"HONGKOU"],[31.0800,121.7000,"PUDONG"],[31.1700,121.5700,"PUDONG"],[30.9300,121.8700,"LINGANG"]];
 const WATERLABELS=[[31.2180,121.5045,"Huangpu"],[31.2700,121.5420,"Huangpu"],[31.1200,121.4640,"Huangpu"],[31.2435,121.4650,"Suzhou Creek"],[31.0500,121.9800,"East China Sea"],[31.1500,121.9500,"East China Sea"]];
+
+/* major roads [name, width class, points] — simplified */
+const ROADS=[
+ ["Nanjing Rd E",2,[[31.2400,121.4903],[31.2387,121.4850],[31.2374,121.4800],[31.2362,121.4762],[31.2350,121.4728]]],
+ ["Nanjing Rd W",2,[[31.2350,121.4728],[31.2325,121.4685],[31.2303,121.4625],[31.2288,121.4572],[31.2262,121.4512],[31.2237,121.4460],[31.2215,121.4400]]],
+ ["Yan'an Elevated",3,[[31.2332,121.4908],[31.2326,121.4850],[31.2305,121.4760],[31.2272,121.4660],[31.2232,121.4560],[31.2185,121.4460],[31.2125,121.4310],[31.2080,121.4180]]],
+ ["N-S Elevated",3,[[31.2620,121.4640],[31.2460,121.4680],[31.2335,121.4703],[31.2205,121.4692],[31.2055,121.4652],[31.1900,121.4620]]],
+ ["Zhongshan E 1st Rd",2,[[31.2450,121.4897],[31.2400,121.4902],[31.2332,121.4908],[31.2272,121.4935],[31.2200,121.4985]]],
+ ["Xizang Rd",1,[[31.2450,121.4785],[31.2365,121.4772],[31.2290,121.4780],[31.2200,121.4795]]],
+ ["Huaihai Rd",2,[[31.2285,121.4855],[31.2255,121.4782],[31.2215,121.4700],[31.2192,121.4622],[31.2160,121.4530],[31.2112,121.4440],[31.2072,121.4378]]],
+ ["Henan Rd",1,[[31.2450,121.4855],[31.2385,121.4846],[31.2300,121.4855],[31.2230,121.4870]]],
+ ["Beijing Rd W",1,[[31.2390,121.4790],[31.2385,121.4700],[31.2380,121.4600],[31.2370,121.4500]]],
+ ["N Suzhou Rd",1,[[31.2452,121.4890],[31.2452,121.4845],[31.2447,121.4790]]],
+ ["Century Ave",3,[[31.2385,121.5040],[31.2330,121.5150],[31.2270,121.5270],[31.2200,121.5400],[31.2080,121.5560]]],
+ ["Lujiazui Ring Rd",1,[[31.2420,121.4990],[31.2400,121.5060],[31.2350,121.5070],[31.2330,121.5010],[31.2375,121.4975],[31.2420,121.4990]]],
+ ["Wukang Rd",1,[[31.2160,121.4410],[31.2105,121.4400],[31.2050,121.4375]]],
+ ["Huangpu Riverside",1,[[31.2470,121.4930],[31.2490,121.4975],[31.2502,121.5030]]]
+];
+/* metro: Line 2 (drawn) + key stations */
+const LINE2=[[31.2235,121.4460],[31.2297,121.4590],[31.2330,121.4750],[31.2385,121.4845],[31.2385,121.5025],[31.2330,121.5150],[31.2290,121.5270],[31.2140,121.5450],[31.2036,121.5576]];
+const STATIONS=[[31.2235,121.4460,"Jing'an Temple"],[31.2297,121.4590,"West Nanjing Rd"],[31.2330,121.4750,"People's Square"],[31.2385,121.4845,"East Nanjing Rd"],[31.2385,121.5025,"Lujiazui"],[31.2390,121.4565,"Natural History Museum"],[31.2195,121.4722,"Xintiandi"],[31.2036,121.5576,"Longyang Rd"]];
+const PARKS=[["People's Park",[[31.2355,121.4700],[31.2345,121.4770],[31.2300,121.4772],[31.2290,121.4705]]],["Jing'an Sculpture Park",[[31.2395,121.4545],[31.2392,121.4590],[31.2365,121.4592],[31.2367,121.4545]]],["Fuxing Park",[[31.2178,121.4655],[31.2178,121.4690],[31.2150,121.4690],[31.2150,121.4655]]]];
 
 /* ---------- itinerary ---------- */
 const S=(t,p,name,o={})=>({k:"s",t,p,name,...o});
@@ -365,6 +392,12 @@ function drawMap(){
   const mPerDeg=111320, rw=Math.max(2.5,Math.min(16,380/mPerDeg*f.k)), cw=Math.max(1.4,Math.min(5,70/mPerDeg*f.k));
   el("path",{d:line(HUANGPU,f),fill:"none",stroke:css("--water"),"stroke-width":rw,"stroke-linecap":"round","stroke-linejoin":"round"},svg);
   el("path",{d:line(SUZHOU,f),fill:"none",stroke:css("--water"),"stroke-width":cw,"stroke-linecap":"round","stroke-linejoin":"round"},svg);
+  const city=f.k>3500;
+  PARKS.forEach(([n,pts])=>el("path",{d:line(pts,f)+"Z",fill:css("--park")},svg));
+  const rs=w=>Math.max(1,Math.min(w*2.2,(w+1)*f.k/9000));
+  ROADS.forEach(([n,w,pts])=>el("path",{d:line(pts,f),fill:"none",stroke:css("--roadedge"),"stroke-width":rs(w)+1.6,"stroke-linecap":"round","stroke-linejoin":"round"},svg));
+  ROADS.forEach(([n,w,pts])=>el("path",{d:line(pts,f),fill:"none",stroke:css("--road"),"stroke-width":rs(w),"stroke-linecap":"round","stroke-linejoin":"round"},svg));
+  el("path",{d:line(LINE2,f),fill:"none",stroke:css("--L2"),"stroke-width":city?2.4:1.6,opacity:.55,"stroke-dasharray":"1 0"},svg);
   const occupied=[];
   const fits=(b)=>b.x>2&&b.y>2&&b.x+b.w<W-2&&b.y+b.h<H-2&&!occupied.some(o=>b.x<o.x+o.w&&b.x+b.w>o.x&&b.y<o.y+o.h&&b.y+b.h>o.y);
   // pins (place-grouped)
@@ -409,6 +442,27 @@ function drawMap(){
       if(fits(b)){occupied.push(b);const t=el("text",{x:lx,y:ly,"text-anchor":anc,class:"pinlabel"},lg);t.textContent=txt;break;}
     }
   });
+  // stations and road names (city zoom only)
+  if(city){
+    const sg=el("g",{},svg);
+    STATIONS.forEach(([la,lo,n])=>{const [x,y]=f(la,lo); if(x<0||y<0||x>W||y>H)return;
+      el("circle",{cx:x,cy:y,r:3.6,fill:css("--surface"),stroke:css("--L2"),"stroke-width":2},sg);
+      const w=n.length*5.3+4; const cands=[[x+6,y-5,"start"],[x-6,y-5,"end"],[x+6,y+12,"start"],[x-6,y+12,"end"]];
+      for(const [lx,ly,anc] of cands){const bx=anc==="start"?lx:lx-w; const b={x:bx,y:ly-9,w,h:11}; if(fits(b)){occupied.push(b);const t=el("text",{x:lx,y:ly,"text-anchor":anc,class:"stationlabel"},sg);t.textContent="Ⓜ "+n;break;}}
+    });
+    const rl=el("g",{},svg);
+    ROADS.forEach(([n,w,pts])=>{
+      // label the longest on-screen segment, rotated along it
+      let best=null;
+      for(let i=0;i<pts.length-1;i++){const a=f(...pts[i]),b=f(...pts[i+1]);const L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+        const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2; if(mx<10||my<10||mx>W-10||my>H-10)continue; if(!best||L>best.L)best={a,b,L,mx,my};}
+      const tw=n.length*5.2; if(!best||best.L<tw+12)return;
+      let ang=Math.atan2(best.b[1]-best.a[1],best.b[0]-best.a[0])*180/Math.PI; if(ang>90)ang-=180; if(ang<-90)ang+=180;
+      const r=Math.abs(Math.cos(ang*Math.PI/180)), bw=tw*r+10*(1-r), bh=tw*(1-r)+10*r;
+      const box={x:best.mx-bw/2,y:best.my-bh/2,w:bw,h:bh}; if(!fits(box))return; occupied.push(box);
+      const t=el("text",{x:best.mx,y:best.my+3,"text-anchor":"middle",class:"roadlabel",transform:`rotate(${ang.toFixed(1)} ${best.mx.toFixed(1)} ${best.my.toFixed(1)})`},rl); t.textContent=n;
+    });
+  }
   // pins
   const pg=el("g",{},svg);
   const pins={};
