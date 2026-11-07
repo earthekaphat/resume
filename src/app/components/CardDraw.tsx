@@ -45,13 +45,16 @@ export function CardDraw() {
   const timers = useRef<number[]>([]);
   const loaded = useRef(false);
 
-  // Restore the last list on this device.
+  // Restore the last list on this device (after the first paint, so the prerendered HTML still matches).
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE) || "null");
-      if (Array.isArray(saved) && saved.length) setItems(saved.slice(0, MAX).map(String));
-    } catch {}
-    loaded.current = true;
+    const id = requestAnimationFrame(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORE) || "null");
+        if (Array.isArray(saved) && saved.length) setItems(saved.slice(0, MAX).map(String));
+      } catch {}
+      loaded.current = true;
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
   useEffect(() => {
@@ -63,14 +66,18 @@ export function CardDraw() {
 
   // Re-lay the table when the item count or width changes.
   useEffect(() => {
+    const n = items.length;
     const place = () => {
       const w = tableRef.current?.clientWidth ?? 600;
-      setSpots(layout(items.length, w));
-      setOrder(items.map((_, i) => i));
+      setSpots(layout(n, w));
+      setOrder(Array.from({ length: n }, (_, i) => i));
     };
-    place();
+    const id = requestAnimationFrame(place);
     window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("resize", place);
+    };
   }, [items.length]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);

@@ -31,4 +31,14 @@ export const TRIPS: Trip[] = [
     },
     highlights: ["Disneyland", "The Bund", "Wukang Road", "Xintiandi", "Haichang"],
   },
+  {
+    slug: "malapascua",
+    city: "Malapascua",
+    country: "Philippines",
+    dates: "29 Apr – 6 May 2027",
+    days: 8,
+    summary: "Scuba diving trip: early-morning thresher shark dives and small island reefs.",
+    href: "",
+    highlights: ["Scuba diving", "Monad Shoal", "Thresher sharks", "Gato Island", "Kimud Shoal"],
+  },
 ];

@@ -18,9 +18,9 @@ export default function TripsPage() {
       </header>
 
       <ul className="trips">
-        {TRIPS.map((t) => (
-          <li key={t.slug}>
-            <a className="trip" href={t.href}>
+        {TRIPS.map((t) => {
+          const body = (
+            <>
               {t.cover && (
                 <span className="trip__cover">
                   <Image src={t.cover.src} alt={`${t.city} cover`} fill sizes="(max-width: 700px) 100vw, 50vw" />
@@ -38,24 +38,33 @@ export default function TripsPage() {
                     <span key={h}>{h}</span>
                   ))}
                 </span>
-                <span className="tile__go">
-                  Open plan <ArrowIcon />
-                </span>
+                {t.href ? (
+                  <span className="tile__go">
+                    Open plan <ArrowIcon />
+                  </span>
+                ) : (
+                  <span className="trip__soon mono">Coming soon</span>
+                )}
               </span>
-            </a>
-            {t.sheet && (
-              <a className="trip__sheet mono" href={t.sheet} download>
-                ตาราง Excel ↓
-              </a>
-            )}
-          </li>
-        ))}
-        <li>
-          <div className="trip trip--soon" aria-label="Next trip coming soon">
-            <span className="trip__city">Next trip</span>
-            <span className="muted">กำลังวางแผน เร็ว ๆ นี้</span>
-          </div>
-        </li>
+            </>
+          );
+          return (
+            <li key={t.slug}>
+              {t.href ? (
+                <a className="trip" href={t.href}>
+                  {body}
+                </a>
+              ) : (
+                <div className={`trip trip--upcoming trip--${t.slug}`}>{body}</div>
+              )}
+              {t.sheet && (
+                <a className="trip__sheet mono" href={t.sheet} download>
+                  ตาราง Excel ↓
+                </a>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <p className="credit mono muted">

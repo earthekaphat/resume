@@ -87,7 +87,8 @@ export default function Home() {
           <span className="tile__kicker mono">travel</span>
           <h2>Trip plans</h2>
           <p>
-            {TRIPS.length} plan{TRIPS.length === 1 ? "" : "s"} so far: {TRIPS.map((t) => t.city).join(", ")}. More coming.
+            Ready: {TRIPS.filter((t) => t.href).map((t) => t.city).join(", ") || "none yet"}.
+            {TRIPS.some((t) => !t.href) && <> Coming soon: {TRIPS.filter((t) => !t.href).map((t) => t.city).join(", ")}.</>}
           </p>
           <span className="tile__stamp mono" aria-hidden>
             {TRIPS[0]?.city.toUpperCase()}
