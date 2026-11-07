@@ -7,7 +7,7 @@ export type Trip = {
   summary: string;
   // Static plan page in /public, or leave empty while the trip is still being planned.
   href: string;
-  // Optional spreadsheet version of the plan in /public.
+  // Optional link to the plan's spreadsheet (e.g. Google Sheets).
   sheet?: string;
   cover?: { src: string; credit: string; creditHref: string };
   highlights: string[];
@@ -23,7 +23,7 @@ export const TRIPS: Trip[] = [
     days: 6,
     summary: "Disneyland, the Bund at night, French Concession streets and a day at Haichang Ocean Park.",
     href: "/shanghai.html",
-    sheet: "/shanghai-schedule.xlsx",
+    sheet: "https://docs.google.com/spreadsheets/d/11Y28E9QhpXxgPKa1JDd7eVePFECHHu4_CLRdPii0vSc/edit?gid=383883520#gid=383883520",
     cover: {
       src: "/trips/shanghai.jpg",
       credit: "Ernest Jourdier · CC BY 4.0",

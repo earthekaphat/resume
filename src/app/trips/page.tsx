@@ -58,8 +58,8 @@ export default function TripsPage() {
                 <div className={`trip trip--upcoming trip--${t.slug}`}>{body}</div>
               )}
               {t.sheet && (
-                <a className="trip__sheet mono" href={t.sheet} download>
-                  ตาราง Excel ↓
+                <a className="trip__sheet mono" href={t.sheet} target="_blank" rel="noopener noreferrer">
+                  Google Sheet ↗
                 </a>
               )}
             </li>
