@@ -141,6 +141,11 @@ h1{font:700 26px/1.15 var(--f-display);margin:6px 0 0;text-wrap:balance}
 .menu .dish{font-weight:600;font-size:14.5px;white-space:nowrap}
 .menu .th{font-size:13.5px;color:var(--muted);min-width:0}
 @media (max-width:420px){.menu li{grid-template-columns:minmax(0,1fr)}.menu .dish{white-space:normal}}
+.br{margin-top:8px;display:grid;gap:4px;font-size:13px;line-height:1.45}
+.br>div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px}
+.br b{font-weight:600;color:var(--muted);font-size:12.5px}
+.br em{font-style:normal;font-weight:600}
+.br em.ok{color:var(--L2)}.br em.warn{color:var(--didi)}
 .q{margin-top:12px;border:1px solid var(--line);border-left:3px solid var(--didi);border-radius:10px;padding:9px 11px;display:grid;gap:5px;background:var(--chip)}
 .q-h{font:600 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--didi)}
 .q-r{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;font-size:13.5px;line-height:1.45}
@@ -199,8 +204,8 @@ const PL={
   yuyuan:[31.2275,121.4920,"Yuyuan"], bund:[31.2400,121.4905,"The Bund"], xmas:[31.2433,121.4872,"Christkindlmarkt"],
   nje:[31.2378,121.4800,"Nanjing Rd East"], taotao:[31.2350,121.4722,"Tao Tao Ju"],
   disney:[31.1437,121.6570,"Shanghai Disneyland"],
-  wukang:[31.2048,121.4373,"Wukang Mansion"], anfu:[31.2135,121.4428,"Anfu Rd"], hai550:[31.2210,121.4690,"Bao's · Matcha Wang"],
-  feida:[31.2186,121.4732,"Fei Da Chu"], xtd:[31.2200,121.4757,"Xintiandi"], suki:[31.2192,121.4655,"New Sukiyaki"], zhang:[31.2273,121.4605,"Zhangyuan"],
+  wukang:[31.2048,121.4373,"Wukang Mansion"], anfu:[31.2135,121.4428,"Anfu Rd"], hai550:[31.2212,121.4688,"Bao's · Matcha Wang"],
+  feida:[31.2226,121.4738,"Fei Da Chu"], xtd:[31.2200,121.4757,"Xintiandi"], suki:[31.2178,121.4630,"New Sukiyaki"], zhang:[31.2273,121.4605,"Zhangyuan"],
   nhm:[31.2376,121.4566,"Natural History Museum"], p818:[31.2302,121.4590,"Long Time Ago"],
   nblawn:[31.2502,121.5020,"North Bund Lawn"], cruise:[31.2491,121.4968,"Manner · Cruise Terminal"], nbview:[31.2471,121.4932,"Viewing Platform"],
   waibaidu:[31.2449,121.4887,"Waibaidu"], jslink:[31.2454,121.4866,"J'S LINK"], postal:[31.2449,121.4840,"Postal Museum"],
@@ -250,13 +255,13 @@ const DAYS=[
   L("L2","Line 2 → West Nanjing Road","~30 นาที"),
   S("09:00","hotel","Waiting Hotel · ฝากกระเป๋า",{cn:"Waiting Hotel 静安"}),
   L("L2","Line 2 → People's Square แล้วเดิน 10 นาที","~15 นาที"),
-  S("10:00","lailai","Lailai Xiaolong · มื้อสาย",{q:{app:"ไม่ต้องจอง · walk-in รับบัตรคิวหน้าร้าน",when:"ไปถึงตอนเปิด ~10:00 (เช้าวันธรรมดาคิวสั้นสุด)",tip:"ถ้าคิวยาว เดินไป 小杨生煎 ซอยข้าง ๆ"},cn:"乔艾莱莱小笼",eat:["蟹粉鲜肉小笼 · ปูผสมหมู ~¥40/8 ลูก เริ่มที่อันนี้","纯蟹膏小笼 · มันปูล้วน เข้มข้น","鲜肉小笼 · หมูล้วน ราคาย่อมเยา","蟹粉馄饨 · เกี๊ยวไส้ปู"],food:1,dp:"乔艾莱莱小笼"}),
+  S("10:00","lailai","Lailai Xiaolong · มื้อสาย",{br:"Lailai Xiaolong · Tianjin Road (street shop) · 504–506 Tianjin Rd, Huangpu",hrs:"ประมาณ 08:00–20:00 · พักเที่ยง 1 ชม.",hok:1,q:{app:"ไม่ต้องจอง · walk-in รับบัตรคิวหน้าร้าน",when:"ไปถึงตอนเปิด ~10:00 (เช้าวันธรรมดาคิวสั้นสุด)",tip:"ถ้าคิวยาว เดินไป 小杨生煎 ซอยข้าง ๆ"},cn:"乔艾莱莱小笼",eat:["蟹粉鲜肉小笼 · ปูผสมหมู ~¥40/8 ลูก เริ่มที่อันนี้","纯蟹膏小笼 · มันปูล้วน เข้มข้น","鲜肉小笼 · หมูล้วน ราคาย่อมเยา","蟹粉馄饨 · เกี๊ยวไส้ปู"],food:1,dp:"乔艾莱莱小笼"}),
   L("L2","เดินไป People's Square → Line 2 → West Nanjing Road","~20 นาที"),
   S("11:30","roastery","Starbucks Reserve Roastery + เดิน Nanjing West",{cn:"星巴克臻选上海烘焙工坊",see:["โรงคั่วกาแฟ 2 ชั้น","ห้างและร้านริมถนน Nanjing West"]}),
   L("walk","เดินกลับโรงแรม","~10 นาที"),
   S("14:00","hotel","เช็กอิน + พัก 2 ชม.",{cn:"Waiting Hotel 静安"}),
   L("didi","DiDi → Yuyuan Bazaar","~25 นาที"),
-  S("16:25","yuyuan","Yuyuan Bazaar ตอนไฟโคมเปิด",{opts:[["Lu Bo Lang 绿波廊 · ติ่มซำเก่าแก่ (Michelin)","绿波廊"]],cn:"豫园商城",see:["สะพานเก้าเลี้ยว","ร้านน้ำชา Huxinting (ถ่ายจากด้านนอก)","ขนมจีนกินระหว่างเดิน"]}),
+  S("16:25","yuyuan","Yuyuan Bazaar ตอนไฟโคมเปิด",{opts:[["Lu Bo Lang · 115 Yuyuan Old Street (Yuyuan Bazaar) · ติ่มซำเก่าแก่ Michelin · เช็กว่าบ่ายเปิดไหม","绿波廊"]],cn:"豫园商城",see:["สะพานเก้าเลี้ยว","ร้านน้ำชา Huxinting (ถ่ายจากด้านนอก)","ขนมจีนกินระหว่างเดิน"]}),
   L("walk","เดินเลียบแม่น้ำขึ้นเหนือ","~15 นาที"),
   S("17:15","bund","The Bund ยามค่ำ",{cn:"外滩",see:["วิวตึก Lujiazui ฝั่งตรงข้าม","ไฟตึกเก่าริม Bund"]}),
   L("walk","เดินไปปลายเหนือของ Bund","~10 นาที"),
@@ -264,7 +269,7 @@ const DAYS=[
   L("walk","เดินไปต้นถนน Nanjing Road East","~5 นาที"),
   S("18:50","nje","ถนนคนเดิน Nanjing Road East",{cn:"南京路步行街",see:["ป้ายไฟนีออน","HEYTEA","Shanghai No.1 Department Store"]}),
   L("walk","เดินต่อไปห้าง New World City","~10 นาที"),
-  S("19:15","taotao","Tao Tao Ju · มื้อเย็น",{q:{app:"大众点评 Dianping / 美团 Meituan → ค้น 陶陶居 新世界城 → 排队取号",when:"กดตอนอยู่ตลาดคริสต์มาส ~18:30",tip:"โทรเช็กก่อนว่าเปิดมื้อเย็น +86 21 5301 7818"},tag:"7F",cn:"陶陶居酒家(新世界城店)",eat:["虾饺 · ฮะเก๋า กุ้งตัวใหญ่ แป้งบาง","百年烧鹅 · ห่านย่างหนังกรอบ ~¥128","红米肠 · ก๋วยเตี๋ยวหลอดแป้งข้าวแดง","榴莲酥 · พายทุเรียน"],food:1,dp:"陶陶居酒家(新世界城店)"}),
+  S("19:15","taotao","Tao Tao Ju · มื้อเย็น",{br:"Tao Tao Ju · New World City 7F, Unit 7C01 · 2-68 Nanjing Rd W, Huangpu (People's Square) · 021-5301 7818",hrs:"ไม่พบเวลามื้อเย็นที่ยืนยันได้ (เคยลงไว้ 10:00–15:30)",hok:0,q:{app:"大众点评 Dianping / 美团 Meituan → ค้น 陶陶居 新世界城 → 排队取号",when:"กดตอนอยู่ตลาดคริสต์มาส ~18:30",tip:"โทรเช็กก่อนว่าเปิดมื้อเย็น +86 21 5301 7818"},tag:"New World City 7F",cn:"陶陶居酒家(新世界城店)",eat:["虾饺 · ฮะเก๋า กุ้งตัวใหญ่ แป้งบาง","百年烧鹅 · ห่านย่างหนังกรอบ ~¥128","红米肠 · ก๋วยเตี๋ยวหลอดแป้งข้าวแดง","榴莲酥 · พายทุเรียน"],food:1,dp:"陶陶居酒家(新世界城店)"}),
   L("L2","Line 2 People's Square → West Nanjing Road","2 สถานี"),
   S("21:00","hotel","กลับโรงแรม",{cn:"Waiting Hotel 静安"})
  ]},
@@ -293,13 +298,13 @@ const DAYS=[
   L("walk","เดินไป Anfu Road","~10 นาที"),
   S("10:00","anfu","Anfu Road",{cn:"安福路",see:["13de Marzo","ร้านเบเกอรี่และคาเฟ่ริมถนน"]}),
   L("didi","DiDi → Huaihai Middle Road","~10 นาที"),
-  S("11:30","hai550","Bao's Pastry · Matcha Wang",{q:{app:"ไม่ต้องจอง · ต่อคิวซื้อกลับ",when:"ไปถึง ~11:30 ก่อนพักเที่ยง",tip:""},tag:"HAI550 1F",cn:"鲍师傅 淮海中路",eat:["肉松小贝 · เค้กไส้หมูหยอง ขายดีที่สุดของ Bao's","Little sheep latte · มัทฉะลาเต้หน้าแกะ","Yuzu matcha latte · มัทฉะส้มยูซุ","Salted matcha soft serve · ซอฟต์เสิร์ฟมัทฉะเค็ม"],food:1,dp:"鲍师傅 淮海中路"}),
-  L("didi","DiDi → Xintiandi","~10 นาที"),
-  S("12:30","feida","Fei Da Chu · มื้อเที่ยง",{q:{app:"Dianping / Meituan หรือ WeChat ค้น 费大厨 → 排队取号 สาขา 新天地",when:"กดตอน ~11:30 ระหว่างอยู่ Bao's",tip:"สำรอง: Din Tai Fung Xintiandi (鼎泰丰 新天地)"},cn:"费大厨辣椒炒肉(新天地店)",eat:["辣椒炒肉 · หมูผัดพริกสด เมนูที่แทบทุกโต๊ะสั่ง","小炒黄牛肉 · เนื้อผัดพริก","皮蛋青椒擂茄子 · มะเขือตำพริกกับไข่เยี่ยวม้า"],food:1,dp:"费大厨辣椒炒肉(新天地店)"}),
+  S("11:30","hai550","Bao's Pastry · Matcha Wang",{br:"Matcha Wang · HAI550 1F, 550 Middle Huaihai Rd · Bao's Pastry · 576 Middle Huaihai Rd (ตึกติดกัน)",hrs:"Matcha Wang 10:00–18:00 หรือ 10:00–22:00 (แหล่งข้อมูลไม่ตรงกัน)",hok:1,q:{app:"ไม่ต้องจอง · ต่อคิวซื้อกลับ",when:"ไปถึง ~11:30 ก่อนพักเที่ยง",tip:""},tag:"HAI550 1F",cn:"鲍师傅 淮海中路",eat:["肉松小贝 · เค้กไส้หมูหยอง ขายดีที่สุดของ Bao's","Little sheep latte · มัทฉะลาเต้หน้าแกะ","Yuzu matcha latte · มัทฉะส้มยูซุ","Salted matcha soft serve · ซอฟต์เสิร์ฟมัทฉะเค็ม"],food:1,dp:"鲍师傅 淮海中路"}),
+  L("walk","เดินไปตึก Xintiandi Plaza ตามถนน Huaihai","~8 นาที"),
+  S("12:30","feida","Fei Da Chu · มื้อเที่ยง",{br:"Fei Da Chu · Xintiandi Plaza 4F · 333 Middle Huaihai Rd, Huangpu · 021-6335 3877",hrs:"ประมาณ 11:00–14:30, 17:00–21:00 (ตามสาขาอื่นในเซี่ยงไฮ้)",hok:1,q:{app:"Dianping / Meituan หรือ WeChat ค้น 费大厨 → 排队取号 สาขา 新天地",when:"กดตอน ~11:30 ระหว่างอยู่ Bao's",tip:"ถ้าคิวยาว ดูร้านสำรองด้านล่าง"},alt:[["Tao Tao Ju Xintiandi · 1F No.17, North Block, Lane 181 Taicang Rd","陶陶居酒家(新天地店)"]],cn:"费大厨辣椒炒肉 新天地广场",eat:["辣椒炒肉 · หมูผัดพริกสด เมนูที่แทบทุกโต๊ะสั่ง","小炒黄牛肉 · เนื้อผัดพริก","皮蛋青椒擂茄子 · มะเขือตำพริกกับไข่เยี่ยวม้า"],food:1,dp:"费大厨辣椒炒肉(新天地店)"}),
   L("walk","เดินเข้า Xintiandi","~3 นาที"),
   S("13:45","xtd","Xintiandi",{cn:"上海新天地",see:["Ah Ma Handmade","Harmay","Joe Malone","Gentle Monster","Salomon"]}),
   L("walk","เดินไป Huaihai Middle Road","~10 นาที"),
-  S("16:45","suki","New Sukiyaki · มื้อเย็น",{q:{app:"บัตรคิวหน้าร้าน (มีรายงานว่าแจกจำนวนจำกัด รอบเย็น ~16:30) · เช็กหน้าร้านใน Meituan / Dianping",when:"ไปยืนรอหน้าร้านตั้งแต่ ~16:00",tip:"คิวยาวที่สุดของทริป สำรอง: Din Tai Fung Xintiandi"},cn:"牛New寿喜烧(淮海中路店)",eat:["M-grade wagyu · เนื้อวากิว สั่งทีละหลายจาน","椒麻大虾 · กุ้งหมาล่า","焦糖布丁 · คาราเมลพุดดิ้ง"],food:1,dp:"牛New寿喜烧(淮海中路店)"}),
+  S("16:45","suki","New Sukiyaki · มื้อเย็น",{br:"New Sukiyaki (Niu New) · Huaihai 755 3F · 755 Middle Huaihai Rd (near Ruijin No.2 Rd), Huangpu",hrs:"11:00–14:30, 16:30–22:00 · มื้อเย็นไม่รับจอง",hok:1,q:{app:"บัตรคิวหน้าร้าน (มีรายงานว่าแจกจำนวนจำกัด รอบเย็น ~16:30) · เช็กหน้าร้านใน Meituan / Dianping",when:"ไปยืนรอหน้าร้านตั้งแต่ ~16:00",tip:"คิวยาวที่สุดของทริป · ถ้าไม่ได้คิว ดูร้านสำรองด้านล่าง"},alt:[["Tao Tao Ju Xintiandi · 1F No.17, North Block, Lane 181 Taicang Rd","陶陶居酒家(新天地店)"],["Fei Da Chu · Xintiandi Plaza 4F (ถ้ายังไม่ได้กินมื้อเที่ยง)","费大厨辣椒炒肉 新天地广场"]],cn:"牛New寿喜烧(淮海中路店)",eat:["M-grade wagyu · เนื้อวากิว สั่งทีละหลายจาน","椒麻大虾 · กุ้งหมาล่า","焦糖布丁 · คาราเมลพุดดิ้ง"],food:1,dp:"牛New寿喜烧(淮海中路店)"}),
   L("L13","Line 13 Xintiandi → West Nanjing Road","~15 นาที"),
   S("18:45","zhang","Zhangyuan + Nanjing West",{cn:"张园",see:["ตรอกบ้านชิคูเหมินที่บูรณะแล้ว","ไฟสวยตอนค่ำ"]}),
   L("walk","เดินกลับโรงแรม","~10 นาที"),
@@ -312,7 +317,7 @@ const DAYS=[
   L("L13","Line 13 → Natural History Museum","1 สถานี"),
   S("10:30","nhm","Shanghai Natural History Museum",{cn:"上海自然博物馆",see:["โครงกระดูกไดโนเสาร์","โซนสัตว์ป่าแอฟริกา"]}),
   L("L13","Line 13 → West Nanjing Road ทางออก 2","1 สถานี"),
-  S("12:45","p818","Long Time Ago · มื้อเที่ยง",{q:{app:"WeChat ค้น 很久以前羊肉串 → mini program → เลือกสาขา 818广场 → 排队",when:"กดตอน ~11:45 ระหว่างอยู่พิพิธภัณฑ์",tip:"ดูคิวสาขาอื่นในมินิโปรแกรมเดียวกันได้"},tag:"818 Plaza B1",cn:"很久以前羊肉串(818广场店)",eat:["呼伦贝尔羊肉串 · ไม้แกะ ~¥66/12 ไม้","牛小排串 · ซี่โครงเนื้อ","烤笋尖 · หน่อไม้ย่าง","海拉尔大雪糕 · ไอศกรีมแท่งใหญ่","泰椒炒饭 · ข้าวผัดพริก"],food:1,dp:"很久以前羊肉串(818广场店)"}),
+  S("12:45","p818","Long Time Ago · มื้อเที่ยง",{br:"Long Time Ago · 818 Plaza B1, Shop B102a–b · Nanjing Rd W (opposite Line 2 West Nanjing Rd Exit 2), Jing'an",hrs:"ประมาณ 11:00–14:00, 17:00–00:30 (เวลาทั่วไปของแบรนด์)",hok:1,q:{app:"WeChat ค้น 很久以前羊肉串 → mini program → เลือกสาขา 818广场 → 排队",when:"กดตอน ~11:45 ระหว่างอยู่พิพิธภัณฑ์",tip:"ดูคิวสาขาอื่นในมินิโปรแกรมเดียวกันได้"},tag:"818 Plaza B1",cn:"很久以前羊肉串(818广场店)",eat:["呼伦贝尔羊肉串 · ไม้แกะ ~¥66/12 ไม้","牛小排串 · ซี่โครงเนื้อ","烤笋尖 · หน่อไม้ย่าง","海拉尔大雪糕 · ไอศกรีมแท่งใหญ่","泰椒炒饭 · ข้าวผัดพริก"],food:1,dp:"很久以前羊肉串(818广场店)"}),
   L("didi","DiDi → North Bund","~20 นาที"),
   S("14:20","nblawn","North Bund Riverside Lawn / Little Dome",{tag:"①",cn:"北外滩滨江绿地"}),
   L("walk","เดินเลียบแม่น้ำ","~5 นาที"),
@@ -334,9 +339,9 @@ const DAYS=[
   L("walk","⑪ เดินขึ้นเหนือริมแม่น้ำ ชม Bund ยามค่ำ","~25 นาที",[[31.2365,121.4925],[31.2398,121.4918],[31.2402,121.4880]]),
   S("18:45","nje","เดินถนนคนเดิน Nanjing Road East",{cn:"南京路步行街",see:["ป้ายไฟนีออน","ห้างเก่าริมถนน","คืนวันเสาร์คนแน่น ระวังกระเป๋า"]}),
   L("walk","เลี้ยวเข้าถนน Tianjin Rd","~5 นาที"),
-  S("19:00","xiaoqiu","Xiaoqiu Home Cooking (Autumn Flavor) · มื้อเย็น",{tag:"天津路496号",cn:"天津路496号",eat:["อาหารจีนบ้าน ๆ รสถูกปากคนไทย","มีเมนูภาษาไทย","คนไทยได้ส่วนลด 10% (ตามป้ายหน้าร้าน)"],
+  S("19:00","xiaoqiu","Xiaoqiu Home Cooking (Autumn Flavor) · มื้อเย็น",{br:"Xiaoqiu Home Cooking (Autumn Flavor) · street shop · 496 Tianjin Rd, Huangpu · +86 177 6514 8176",hrs:"09:30–23:45",hok:1,tag:"天津路496号",cn:"天津路496号",eat:["อาหารจีนบ้าน ๆ รสถูกปากคนไทย","มีเมนูภาษาไทย","คนไทยได้ส่วนลด 10% (ตามป้ายหน้าร้าน)"],
     q:{app:"ไม่มีระบบจองที่ยืนยันได้ · walk-in (ลองค้นใน Dianping ว่ามี 排队 ไหม)",when:"ไปถึงก่อน ~18:30 ถ้าเดินถนนคนเดินหลังกินได้",tip:"ที่อยู่ยังไม่ตรงกันทุกแหล่ง เช็กใน Amap ก่อน"},
-    alt:[["Xinbai Lu · ร้านใหญ่ คิวขยับเร็ว","新白鹿餐厅(南京东路店)"],["Yang's Dumpling · กินเร็ว","小杨生煎 南京东路"]]}),
+    alt:[["Xinbai Lu · Shanghai No.1 Department Store, 800 Nanjing Rd E · ร้านใหญ่ คิวขยับเร็ว","新白鹿餐厅(南京东路店)"],["Yang's Dumpling · กินเร็ว","小杨生煎 南京东路"]]}),
   L("walk","เดินถนนคนเดินต่อไปทาง People's Square","~15 นาที"),
   L("L2","Line 2 East Nanjing Road → West Nanjing Road","2 สถานี"),
   S("21:00","hotel","กลับโรงแรม",{cn:"Waiting Hotel 静安"})
@@ -356,9 +361,9 @@ const DAYS=[
   L("L16","Line 16 → Longyang Road → Line 2 ตรงไป Jing'an Temple","~1 ชม. 30 นาที",[[31.2036,121.5576]]),
   S("17:15","jingan","Jing'an Temple",{cn:"静安寺地铁站"}),
   L("walk","เดินไปถนน Yuyuan Rd","~5 นาที"),
-  S("17:30","maotou","Maotou Laodie · มื้อเย็น",{tag:"愚园路246弄6号",cn:"毛头老爹饭店(静安寺店)",eat:["红烧肉 · หมูสามชั้นตุ๋นซีอิ๊ว เมนูเด่น","อาหารเซี่ยงไฮ้บ้าน ๆ"],food:1,dp:"毛头老爹饭店",
+  S("17:30","maotou","Maotou Laodie · มื้อเย็น",{br:"Maotou Laodie · Jing'an Temple branch (alley shop) · No.6, Lane 246, Yuyuan Rd, Jing'an",hrs:"ยังหาเวลาเปิดที่ยืนยันได้ไม่เจอ",hok:0,tag:"愚园路246弄6号",cn:"毛头老爹饭店(静安寺店)",eat:["红烧肉 · หมูสามชั้นตุ๋นซีอิ๊ว เมนูเด่น","อาหารเซี่ยงไฮ้บ้าน ๆ"],food:1,dp:"毛头老爹饭店",
     q:{app:"大众点评 Dianping / 美团 Meituan → ค้น 毛头老爹 静安寺 → 排队取号",when:"กดตอนอยู่บน Line 16 ~16:30",tip:"ร้านอยู่ในตรอก เย็นวันอาทิตย์อาจมีคิว · ยังไม่ได้ยืนยันเวลาเปิด"},
-    alt:[["人和馆 静安寺店 · อาหารเซี่ยงไฮ้ ถนนเดียวกัน","人和馆 静安寺"],["Crystal Jade · Super Brand 8F (ไปกินที่ Lujiazui แทน)","翡翠酒家 正大广场"]]}),
+    alt:[["Renheguan · 3F, 142–146 Yuyuan Rd, Jing'an · อาหารเซี่ยงไฮ้ ถนนเดียวกัน","人和馆 静安寺"],["Crystal Jade · Super Brand Mall 8F, 168 Lujiazui Rd W · ไปกินที่ Lujiazui แทน","翡翠酒家 正大广场"]]}),
   L("L2","Line 2 Jing'an Temple → Lujiazui","~15 นาที"),
   S("19:15","ljzriver","Lujiazui Riverside วิวกลางคืน",{cn:"陆家嘴滨江大道",see:["วิว Bund ฝั่งตรงข้าม","Oriental Pearl Tower"],eat:["ของหวาน IFC: BUTTERFUL & CREAMOROUS","Super Brand 3F: CHAGEE · YEAH GELATO"]}),
   L("L2","Line 2 Lujiazui → West Nanjing Road","~15 นาที"),
@@ -555,6 +560,7 @@ function renderTimeline(){
       <div class="card">${photo(it)}<div class="when">${esc(it.t)}</div>
       <div class="ttl"><h3>${esc(it.name)}</h3>${it.tag?`<span class="tag">${esc(it.tag)}</span>`:""}</div>
       ${it.cn?`<div class="cn">${esc(it.cn)}</div>`:""}
+      ${it.br?`<div class="br"><div><b>สาขา</b><span>${esc(it.br)}</span></div><div><b>เวลาเปิด</b><span>${esc(it.hrs)} <em class="${it.hok?"ok":"warn"}">${it.hok?"✓ ตรงกับเวลาในแพลน":"⚠ เช็กก่อนไป"}</em></span></div></div>`:""}
       ${chips("แวะ / ดู",it.see)}${it.food?menu(it.eat):chips("ของกิน",it.eat)}${opts}${queue(it)}
       ${it.cn||it.dp?`<div class="links">${it.cn?`<a class="amap" href="${amapURL(it.cn)}" target="_blank" rel="noopener">${PINICON}เปิดใน Amap</a>`:""}${it.dp?`<a class="dp" href="${dpURL(it.dp)}" target="_blank" rel="noopener">ดูรูปเมนูใน Dianping ↗</a>`:""}</div>`:""}
       </div></li>`;
