@@ -57,6 +57,7 @@ export function TravelMap() {
   const [query, setQuery] = useState("");
   const [title, setTitle] = useState("Places I’ve been");
   const [busy, setBusy] = useState(false);
+  const [shape, setShape] = useState<"portrait" | "landscape">("portrait");
   const svgRef = useRef<SVGSVGElement>(null);
   const loaded = useRef(false);
 
@@ -148,31 +149,68 @@ export function TravelMap() {
         img.onerror = () => rej(new Error("map image failed"));
         img.src = url;
       });
+      // Portrait 1080×1350 (Instagram post) lists the countries under the map; landscape is 1920×1080.
+      const tall = shape === "portrait";
       const cv = document.createElement("canvas");
-      cv.width = 1920;
-      cv.height = 1080;
+      cv.width = tall ? 1080 : 1920;
+      cv.height = tall ? 1350 : 1080;
       const ctx = cv.getContext("2d");
       if (!ctx) throw new Error("no canvas");
+      const sans = "system-ui, -apple-system, Segoe UI, sans-serif";
+      const mono = "ui-monospace, Menlo, monospace";
+      const left = tall ? 64 : 80;
       ctx.fillStyle = C.sea;
       ctx.fillRect(0, 0, cv.width, cv.height);
-      const mapW = 1560;
-      const mapH = (mapW / W) * H;
-      ctx.drawImage(img, (1920 - mapW) / 2, 215, mapW, mapH);
       ctx.fillStyle = C.text;
-      ctx.font = "800 64px system-ui, -apple-system, Segoe UI, sans-serif";
-      ctx.fillText(title.trim() || "Places I’ve been", 80, 120);
+      ctx.font = `800 ${tall ? 60 : 64}px ${sans}`;
+      ctx.fillText(title.trim() || "Places I’ve been", left, tall ? 118 : 120);
       ctx.fillStyle = C.visited;
-      ctx.font = "600 34px ui-monospace, Menlo, monospace";
-      ctx.fillText(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, 80, 180);
+      ctx.font = `600 ${tall ? 32 : 34}px ${mono}`;
+      ctx.fillText(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, left, tall ? 172 : 180);
+      const mapW = tall ? 1000 : 1560;
+      const mapH = (mapW / W) * H;
+      const mapY = tall ? 220 : 215;
+      ctx.drawImage(img, (cv.width - mapW) / 2, mapY, mapW, mapH);
+      if (tall && count > 0) {
+        // Country names in three columns below the map, with "+N more" if they run out of room.
+        const names = [...picked].sort();
+        const top = mapY + mapH + 70;
+        const lineH = 42;
+        const cols = 3;
+        const maxRows = Math.max(1, Math.floor((cv.height - top - 90) / lineH));
+        const room = maxRows * cols;
+        // Balance the columns instead of filling the first one to the bottom.
+        const rows = Math.min(maxRows, Math.max(1, Math.ceil(names.length / cols)));
+        const shown = names.length > room ? names.slice(0, room - 1) : names;
+        ctx.font = `500 27px ${sans}`;
+        const colW = (cv.width - left * 2) / cols;
+        shown.forEach((n, i) => {
+          const x = left + Math.floor(i / rows) * colW;
+          const y = top + (i % rows) * lineH;
+          ctx.fillStyle = C.visited;
+          ctx.beginPath();
+          ctx.arc(x + 7, y - 9, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = C.text;
+          let label = n;
+          while (ctx.measureText(label).width > colW - 36 && label.length > 4) label = label.slice(0, -2) + "…";
+          ctx.fillText(label, x + 24, y);
+        });
+        if (names.length > shown.length) {
+          const i = shown.length;
+          ctx.fillStyle = C.muted;
+          ctx.fillText(`+${names.length - shown.length} more`, left + Math.floor(i / rows) * colW + 24, top + (i % rows) * lineH);
+        }
+      }
       ctx.fillStyle = C.muted;
-      ctx.font = "500 24px ui-monospace, Menlo, monospace";
-      ctx.fillText("resume-dv5u.vercel.app/map", 80, 1080 - 36);
+      ctx.font = `500 ${tall ? 22 : 24}px ${mono}`;
+      ctx.fillText("resume-dv5u.vercel.app/map", left, cv.height - 36);
       URL.revokeObjectURL(url);
       const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/png"));
       if (!blob) throw new Error("no image");
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "travel-map.png";
+      a.download = `travel-map-${shape}.png`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     } finally {
@@ -224,6 +262,14 @@ export function TravelMap() {
             <span className="mono muted">Image title</span>
             <input id="map-title" value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} />
           </label>
+          <div className="tmap__shape" role="radiogroup" aria-label="Image shape">
+            {(["portrait", "landscape"] as const).map((k) => (
+              <button key={k} type="button" role="radio" aria-checked={shape === k} className={shape === k ? "is-on" : undefined} onClick={() => setShape(k)}>
+                <i className={`tmap__shape-icon is-${k}`} aria-hidden />
+                {k === "portrait" ? "Portrait" : "Landscape"}
+              </button>
+            ))}
+          </div>
           <button type="button" className="btn btn--primary" onClick={download} disabled={!countries || busy}>
             {busy ? "Saving…" : "Download PNG"}
           </button>

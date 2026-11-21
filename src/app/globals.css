@@ -362,6 +362,12 @@ li.is-current .exp__period { color: var(--accent); }
   width: 100%; font: 500 16px/1.2 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px;
 }
 .tmap__title input:focus, .tmap__search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.tmap__shape { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+.tmap__shape button { display: inline-flex; align-items: center; gap: 7px; border: 0; cursor: pointer; padding: 8px 12px; border-radius: 10px; background: none; color: var(--muted); font: 600 14px/1 var(--f-body); }
+.tmap__shape button.is-on { background: var(--surface-2); color: var(--ink); }
+.tmap__shape-icon { display: inline-block; border: 2px solid currentColor; border-radius: 3px; }
+.tmap__shape-icon.is-portrait { width: 12px; height: 16px; }
+.tmap__shape-icon.is-landscape { width: 17px; height: 12px; }
 .tmap__picked { display: grid; gap: 8px; }
 .tmap__picked-head { display: flex; justify-content: space-between; align-items: center; }
 .tmap__picked-head .mono { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
