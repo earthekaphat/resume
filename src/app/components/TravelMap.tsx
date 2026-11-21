@@ -10,6 +10,8 @@ const STORE = "earth-travel-map";
 const W = 960;
 const H = 500;
 const WORLD = 195; // UN member and observer states
+// Switch to earthekaphat.vercel.app once that domain is added in Vercel.
+const SITE_URL = "resume-dv5u.vercel.app/map";
 // Fixed palette so the on-page map and the downloaded image match.
 const C = { sea: "#0E151C", land: "#2A3643", visited: "#3DDC97", edge: "#0E151C", dot: "#3DDC97", text: "#E8EEF5", muted: "#8D9BAB" };
 
@@ -149,11 +151,12 @@ export function TravelMap() {
         img.onerror = () => rej(new Error("map image failed"));
         img.src = url;
       });
-      // Portrait 1080×1350 (Instagram post) lists the countries under the map; landscape is 1920×1080.
+      // Portrait is a 1080×1920 Instagram story (content kept clear of the top and bottom
+      // ~250px the story UI covers) with the countries listed under the map; landscape is 1920×1080.
       const tall = shape === "portrait";
       const cv = document.createElement("canvas");
       cv.width = tall ? 1080 : 1920;
-      cv.height = tall ? 1350 : 1080;
+      cv.height = tall ? 1920 : 1080;
       const ctx = cv.getContext("2d");
       if (!ctx) throw new Error("no canvas");
       const sans = "system-ui, -apple-system, Segoe UI, sans-serif";
@@ -162,27 +165,27 @@ export function TravelMap() {
       ctx.fillStyle = C.sea;
       ctx.fillRect(0, 0, cv.width, cv.height);
       ctx.fillStyle = C.text;
-      ctx.font = `800 ${tall ? 60 : 64}px ${sans}`;
-      ctx.fillText(title.trim() || "Places I’ve been", left, tall ? 118 : 120);
+      ctx.font = `800 ${tall ? 72 : 64}px ${sans}`;
+      ctx.fillText(title.trim() || "Places I’ve been", left, tall ? 340 : 120);
       ctx.fillStyle = C.visited;
-      ctx.font = `600 ${tall ? 32 : 34}px ${mono}`;
-      ctx.fillText(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, left, tall ? 172 : 180);
+      ctx.font = `600 ${tall ? 36 : 34}px ${mono}`;
+      ctx.fillText(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, left, tall ? 410 : 180);
       const mapW = tall ? 1000 : 1560;
       const mapH = (mapW / W) * H;
-      const mapY = tall ? 220 : 215;
+      const mapY = tall ? 470 : 215;
       ctx.drawImage(img, (cv.width - mapW) / 2, mapY, mapW, mapH);
       if (tall && count > 0) {
         // Country names in three columns below the map, with "+N more" if they run out of room.
         const names = [...picked].sort();
-        const top = mapY + mapH + 70;
-        const lineH = 42;
+        const top = mapY + mapH + 90;
+        const lineH = 46;
         const cols = 3;
-        const maxRows = Math.max(1, Math.floor((cv.height - top - 90) / lineH));
+        const maxRows = Math.max(1, Math.floor((cv.height - 340 - top) / lineH));
         const room = maxRows * cols;
         // Balance the columns instead of filling the first one to the bottom.
         const rows = Math.min(maxRows, Math.max(1, Math.ceil(names.length / cols)));
         const shown = names.length > room ? names.slice(0, room - 1) : names;
-        ctx.font = `500 27px ${sans}`;
+        ctx.font = `500 30px ${sans}`;
         const colW = (cv.width - left * 2) / cols;
         shown.forEach((n, i) => {
           const x = left + Math.floor(i / rows) * colW;
@@ -203,8 +206,8 @@ export function TravelMap() {
         }
       }
       ctx.fillStyle = C.muted;
-      ctx.font = `500 ${tall ? 22 : 24}px ${mono}`;
-      ctx.fillText("resume-dv5u.vercel.app/map", left, cv.height - 36);
+      ctx.font = `500 ${tall ? 26 : 24}px ${mono}`;
+      ctx.fillText(SITE_URL, left, tall ? cv.height - 270 : cv.height - 36);
       URL.revokeObjectURL(url);
       const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/png"));
       if (!blob) throw new Error("no image");
@@ -266,7 +269,7 @@ export function TravelMap() {
             {(["portrait", "landscape"] as const).map((k) => (
               <button key={k} type="button" role="radio" aria-checked={shape === k} className={shape === k ? "is-on" : undefined} onClick={() => setShape(k)}>
                 <i className={`tmap__shape-icon is-${k}`} aria-hidden />
-                {k === "portrait" ? "Portrait" : "Landscape"}
+                {k === "portrait" ? "Portrait 9:16" : "Landscape"}
               </button>
             ))}
           </div>
