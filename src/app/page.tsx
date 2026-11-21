@@ -61,7 +61,7 @@ export default function Home() {
             <T en="Travel map" th="แผนที่ประเทศที่เคยไป" />
           </h2>
           <p>
-            <T en="Pick the countries you’ve been to, see them on a world map and download it." th="เลือกประเทศที่เคยไป ดูบนแผนที่โลก แล้วดาวน์โหลดเป็นรูปได้" />
+            <T en="Countries, Thai provinces and a trip calendar. Mark where you’ve been and download it." th="แผนที่โลก จังหวัดในไทย และปฏิทินทริป เลือกที่เคยไปแล้วดาวน์โหลดเป็นรูปได้" />
           </p>
           <span className="tile__globe" aria-hidden>
             <i />

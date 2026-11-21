@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { T } from "../i18n";
-import { TravelMap } from "../components/TravelMap";
+import { MapTabs } from "../components/MapTabs";
 
 export const metadata: Metadata = {
   title: "Travel map · Ekaphat",
-  description: "Pick the countries you have been to, see them on a world map and download it as an image.",
+  description: "Mark countries and Thai provinces you have been to, or put trips on a calendar, and download them as images.",
 };
 
 export default function MapPage() {
@@ -17,12 +17,12 @@ export default function MapPage() {
         </h1>
         <p className="muted">
           <T
-            en="Tap countries on the map or pick them from the list. Your picks are saved on this device. Download the map as an image when you’re done."
-            th="แตะประเทศบนแผนที่หรือเลือกจากรายการ ประเทศที่เลือกจะถูกจำไว้ในเครื่องนี้ เสร็จแล้วดาวน์โหลดแผนที่เป็นรูปได้"
+            en="Mark the countries or Thai provinces you’ve been to, or put your trips on a calendar. Everything is saved on this device, and each one downloads as an image."
+            th="เลือกประเทศหรือจังหวัดในไทยที่เคยไป หรือใส่ทริปลงปฏิทิน ข้อมูลจะถูกจำไว้ในเครื่องนี้ และดาวน์โหลดเป็นรูปได้ทุกแบบ"
           />
         </p>
       </header>
-      <TravelMap />
+      <MapTabs />
     </main>
   );
 }
