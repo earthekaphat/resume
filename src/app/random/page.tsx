@@ -11,9 +11,9 @@ export default function RandomPage() {
     <main className="page">
       <header className="page-head">
         <p className="eyebrow mono">tool · random picker</p>
-        <h1>สับไพ่ เลือกให้</h1>
+        <h1>Shuffle and pick</h1>
         <p className="muted">
-          ใส่ตัวเลือกได้สูงสุด 10 อัน กดสับไพ่ แล้วไพ่ใบหนึ่งจะพลิกขึ้นมาเป็นคำตอบ รายการจะจำไว้ในเครื่องนี้
+          Add up to 10 choices and shuffle. One card flips over with the answer. Your list is saved on this device.
         </p>
       </header>
       <CardDraw />

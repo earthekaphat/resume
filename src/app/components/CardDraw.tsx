@@ -90,12 +90,12 @@ export function CardDraw() {
     if (!parts.length) return;
     const room = MAX - items.length;
     if (room <= 0) {
-      setMsg(`ใส่ได้สูงสุด ${MAX} อัน ลบบางอันออกก่อน`);
+      setMsg(`You can add up to ${MAX}. Remove one first.`);
       return;
     }
     const next = parts.slice(0, room);
     setItems([...items, ...next]);
-    setMsg(parts.length > room ? `เพิ่มได้แค่ ${room} อัน เพราะครบ ${MAX} แล้ว` : "");
+    setMsg(parts.length > room ? `Only ${room} added. The limit is ${MAX}.` : "");
     setDraft("");
     reset();
   }
@@ -220,7 +220,7 @@ export function CardDraw() {
           }}
         >
           <label htmlFor="choice" className="mono muted">
-            ตัวเลือก {items.length}/{MAX}
+            Choices {items.length}/{MAX}
           </label>
           <div className="draw__row">
             <input
@@ -234,43 +234,43 @@ export function CardDraw() {
                   add(t);
                 }
               }}
-              placeholder={items.length >= MAX ? "ครบ 10 อันแล้ว" : "พิมพ์แล้วกด Enter (วางหลายบรรทัดได้)"}
+              placeholder={items.length >= MAX ? "That's 10 already" : "Type and press Enter (or paste a list)"}
               maxLength={40}
               disabled={items.length >= MAX}
               autoComplete="off"
             />
             <button type="submit" className="btn btn--ghost" disabled={!draft.trim() || items.length >= MAX}>
-              เพิ่ม
+              Add
             </button>
           </div>
         </form>
 
-        <ul className="chips" aria-label="ตัวเลือกทั้งหมด">
+        <ul className="chips" aria-label="All choices">
           {items.map((it, i) => (
             <li key={`${it}-${i}`} className={winner === i ? "chip chip--win" : "chip"}>
               {it}
-              <button type="button" onClick={() => remove(i)} aria-label={`ลบ ${it}`}>
+              <button type="button" onClick={() => remove(i)} aria-label={`Remove ${it}`}>
                 ×
               </button>
             </li>
           ))}
         </ul>
         <p className="draw__msg" role="status">
-          {msg || (items.length < 2 ? "ใส่อย่างน้อย 2 อันเพื่อสุ่ม" : "")}
+          {msg || (items.length < 2 ? "Add at least 2 choices to draw" : "")}
         </p>
 
         <div className="draw__actions">
           <button type="button" className="btn btn--primary" onClick={draw} disabled={!canDraw}>
-            {phase === "shuffling" ? "กำลังสับไพ่…" : phase === "revealed" ? "สุ่มอีกครั้ง" : "สับไพ่แล้วสุ่ม"}
+            {phase === "shuffling" ? "Shuffling…" : phase === "revealed" ? "Draw again" : "Shuffle and draw"}
           </button>
           {phase === "revealed" && items.length > 2 && (
             <button type="button" className="btn btn--ghost" onClick={removeWinnerAndDraw}>
-              ตัดอันนี้ออก
+              Remove this one
             </button>
           )}
           {items.length > 0 && (
             <button type="button" className="btn btn--text" onClick={() => { setItems([]); reset(); setMsg(""); }}>
-              ล้างทั้งหมด
+              Clear all
             </button>
           )}
         </div>
@@ -300,15 +300,15 @@ export function CardDraw() {
             </div>
           );
         })}
-        {items.length === 0 && <p className="table__empty">เพิ่มตัวเลือกด้านซ้ายเพื่อวางไพ่บนโต๊ะ</p>}
+        {items.length === 0 && <p className="table__empty">Add choices to deal cards onto the table</p>}
         {phase === "revealed" && winner !== null && (
-          <p className="sr-only">ผลสุ่มคือ {items[winner]}</p>
+          <p className="sr-only">The result is {items[winner]}</p>
         )}
       </div>
 
       {history.length > 0 && (
         <div className="history">
-          <span className="mono muted">ผลล่าสุด</span>
+          <span className="mono muted">Recent</span>
           <ol>
             {history.map((h, i) => (
               <li key={i}>{h}</li>
