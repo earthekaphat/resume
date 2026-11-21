@@ -261,7 +261,16 @@ export function TravelMap() {
             const on = picked.has(c.name);
             return (
               <li key={c.name}>
-                <button type="button" className={on ? "is-on" : undefined} aria-pressed={on} onClick={() => toggle(c.name)}>
+                <button
+                  type="button"
+                  className={on ? "is-on" : undefined}
+                  aria-pressed={on}
+                  onClick={() => {
+                    toggle(c.name);
+                    // After picking from a search, clear it so the next country can be typed straight away.
+                    if (query) setQuery("");
+                  }}
+                >
                   <span className="tmap__check" aria-hidden>
                     {on ? "✓" : ""}
                   </span>
