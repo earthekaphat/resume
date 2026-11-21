@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLang } from "../i18n";
+import { RangePicker } from "./RangePicker";
 import { ShapePicker } from "./TravelMap";
 
 type Trip = { id: string; code: string; from: string; to: string };
@@ -94,6 +95,7 @@ export function TravelCalendar() {
     return m;
   }, [trips]);
 
+  const dayFlags = useMemo(() => new Map([...byDay].map(([k, codes]) => [k, flagOf(codes[codes.length - 1])])), [byDay]);
   const yearTrips = trips.filter((tr) => tr.from.slice(0, 4) <= String(year) && tr.to.slice(0, 4) >= String(year));
   const daysAway = [...byDay.keys()].filter((k) => k.startsWith(`${year}-`)).length;
   const countriesThisYear = new Set(yearTrips.map((tr) => tr.code)).size;
@@ -260,15 +262,21 @@ export function TravelCalendar() {
               ))}
             </select>
           </label>
-          <label>
-            <span className="mono muted">{t("From", "วันไป")}</span>
-            <input id="cal-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </label>
-          <label>
-            <span className="mono muted">{t("To", "วันกลับ")}</span>
-            <input id="cal-to" type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
-          </label>
-          <button type="button" className="btn btn--primary" onClick={addTrip}>
+          <div className="tcal__dates-pick">
+            <span className="mono muted">{t("Dates", "วันที่")}</span>
+            <RangePicker
+              key={year}
+              from={from}
+              to={to}
+              startYear={year}
+              flags={dayFlags}
+              onChange={(f, tt) => {
+                setFrom(f);
+                setTo(tt);
+              }}
+            />
+          </div>
+          <button type="button" className="btn btn--primary tcal__add" onClick={addTrip}>
             {t("Add", "เพิ่ม")}
           </button>
         </div>
