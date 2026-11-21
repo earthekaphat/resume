@@ -443,6 +443,13 @@ li.is-current .exp__period { color: var(--accent); }
   width: 100%; min-width: 0; font: 500 16px/1.2 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
 }
 .tcal__err { margin: 0; color: var(--amber); font-size: 14px; }
+.tcal__country { display: grid; gap: 6px; font-size: 12px; min-width: 0; align-content: start; }
+.tcal__country input { width: 100%; min-width: 0; font: 500 16px/1.2 var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; }
+.tcal__country input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.tcal__chosen { justify-self: start; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); border-radius: 999px; padding: 9px 14px; font: 600 15px/1.1 var(--f-body); cursor: pointer; max-width: 100%; }
+.tcal__suggest { list-style: none; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); display: grid; gap: 2px; }
+.tcal__suggest button { width: 100%; text-align: left; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 9px 10px; border-radius: 9px; font: 500 15px/1.2 var(--f-body); display: flex; gap: 10px; align-items: center; }
+.tcal__suggest button:hover, .tcal__suggest button:focus-visible { background: var(--line); }
 .tcal__trips { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .tcal__trips li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
 .tcal__flag { font-size: 22px; }

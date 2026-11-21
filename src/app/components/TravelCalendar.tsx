@@ -42,6 +42,8 @@ export function TravelCalendar() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [caption, setCaption] = useState("");
   const [code, setCode] = useState("");
+  const [cq, setCq] = useState("");
+  const [cOpen, setCOpen] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [err, setErr] = useState("");
@@ -51,6 +53,16 @@ export function TravelCalendar() {
   const loaded = useRef(false);
 
   const countries = useMemo(() => countryList(lang), [lang]);
+  // Search matches English and Thai names whatever the page language is.
+  const otherNames = useMemo(() => new Map(countryList(lang === "th" ? "en" : "th").map((c) => [c.code, c.name])), [lang]);
+  const countryMatches = useMemo(() => {
+    const q = cq.trim().toLowerCase();
+    if (!q) return countries.slice(0, 0);
+    return countries
+      .filter((c) => c.name.toLowerCase().includes(q) || (otherNames.get(c.code) ?? "").toLowerCase().includes(q) || c.code.toLowerCase() === q)
+      .sort((a, b) => Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q)))
+      .slice(0, 8);
+  }, [countries, otherNames, cq]);
   const nameOf = useMemo(() => {
     const m = new Map(countries.map((c) => [c.code, c.name]));
     return (c: string) => m.get(c) ?? c;
@@ -251,17 +263,59 @@ export function TravelCalendar() {
       <div className="tmap__card">
         <h3 className="tcal__h3">{t("Add a trip", "เพิ่มทริป")}</h3>
         <div className="tcal__form">
-          <label>
-            <span className="mono muted">{t("Country", "ประเทศ")}</span>
-            <select id="cal-country" value={code} onChange={(e) => setCode(e.target.value)}>
-              <option value="">{t("Choose a country", "เลือกประเทศ")}</option>
-              {countries.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {flagOf(c.code)} {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="tcal__country">
+            <label htmlFor="cal-country" className="mono muted">
+              {t("Country", "ประเทศ")}
+            </label>
+            {code ? (
+              <button type="button" className="tcal__chosen" onClick={() => setCode("")} aria-label={t("Change country", "เปลี่ยนประเทศ")}>
+                <span aria-hidden>{flagOf(code)}</span> {nameOf(code)} <span className="muted" aria-hidden>×</span>
+              </button>
+            ) : (
+              <>
+                <input
+                  id="cal-country"
+                  value={cq}
+                  autoComplete="off"
+                  placeholder={t("Type a country, e.g. Japan", "พิมพ์ชื่อประเทศ เช่น ญี่ปุ่น")}
+                  onChange={(e) => {
+                    setCq(e.target.value);
+                    setCOpen(true);
+                  }}
+                  onFocus={() => setCOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && countryMatches[0]) {
+                      e.preventDefault();
+                      setCode(countryMatches[0].code);
+                      setCq("");
+                      setCOpen(false);
+                    }
+                  }}
+                />
+                {cOpen && countryMatches.length > 0 && (
+                  <ul className="tcal__suggest" role="listbox">
+                    {countryMatches.map((c) => (
+                      <li key={c.code}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={false}
+                          onClick={() => {
+                            setCode(c.code);
+                            setCq("");
+                            setCOpen(false);
+                          }}
+                        >
+                          <span aria-hidden>{flagOf(c.code)}</span> {c.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {cOpen && cq.trim() && countryMatches.length === 0 && <p className="tcal__err">{t("No country matches that.", "ไม่พบประเทศที่ตรงกัน")}</p>}
+              </>
+            )}
+          </div>
           <div className="tcal__dates-pick">
             <span className="mono muted">{t("Dates", "วันที่")}</span>
             <RangePicker
