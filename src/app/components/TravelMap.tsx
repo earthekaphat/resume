@@ -10,8 +10,7 @@ const STORE = "earth-travel-map";
 const W = 960;
 const H = 500;
 const WORLD = 195; // UN member and observer states
-// Switch to earthekaphat.vercel.app once that domain is added in Vercel.
-const SITE_URL = "resume-dv5u.vercel.app/map";
+const SITE_URL = "earthekaphat.vercel.app/map";
 // Fixed palette so the on-page map and the downloaded image match.
 const C = { sea: "#0E151C", land: "#2A3643", visited: "#3DDC97", edge: "#0E151C", dot: "#3DDC97", text: "#E8EEF5", muted: "#8D9BAB" };
 
