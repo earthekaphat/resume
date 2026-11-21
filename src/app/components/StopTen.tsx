@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLang } from "../i18n";
 
 const TARGET = 10;
 const VISIBLE_FOR = 3; // seconds the clock is shown before it hides
@@ -16,6 +17,7 @@ const signed = (d: number) => `${d >= 0 ? "+" : "−"}${Math.abs(d).toFixed(2)}`
 // Each player starts a stopwatch, the digits vanish after 3 s, and they stop it
 // as close to 10.00 s as they can. Farthest from 10.00 loses.
 export function StopTen({ names, onDone }: Props) {
+  const { t } = useLang();
   const [player, setPlayer] = useState<0 | 1>(0);
   const [phase, setPhase] = useState<"intro" | "running" | "stopped">("intro");
   const [shown, setShown] = useState("0.00");
@@ -60,7 +62,7 @@ export function StopTen({ names, onDone }: Props) {
     const da = Math.abs(a - TARGET);
     const db = Math.abs(b - TARGET);
     const loser = Math.abs(da - db) < 0.005 ? null : da > db ? 0 : 1;
-    onDone(loser, `${names[0]} ${fmt(a)} s (${signed(a - TARGET)}) · ${names[1]} ${fmt(b)} s (${signed(b - TARGET)})`);
+    onDone(loser, `${names[0]} ${fmt(a)}${t(" s", " วิ")} (${signed(a - TARGET)}) · ${names[1]} ${fmt(b)}${t(" s", " วิ")} (${signed(b - TARGET)})`);
   }
 
   if (phase === "intro") {
@@ -70,11 +72,11 @@ export function StopTen({ names, onDone }: Props) {
           ⏱️
         </span>
         <p className="turn-banner">
-          <b>{names[player]}</b>, stop the clock at exactly 10.00
+          <b>{names[player]}</b>{t(", stop the clock at exactly 10.00", " กดหยุดเวลาให้ตรง 10.00 พอดี")}
         </p>
-        <p className="muted">The digits disappear after 3 seconds. Count the rest in your head.</p>
+        <p className="muted">{t("The digits disappear after 3 seconds. Count the rest in your head.", "ตัวเลขจะหายไปหลัง 3 วินาที ที่เหลือต้องนับในใจ")}</p>
         <button type="button" className="btn btn--primary" onClick={start}>
-          Start
+          {t("Start", "เริ่ม")}
         </button>
       </div>
     );
@@ -90,7 +92,7 @@ export function StopTen({ names, onDone }: Props) {
           {shown}
         </p>
         <button type="button" className="stopten__btn" onClick={stop}>
-          STOP
+          {t("STOP", "หยุด")}
         </button>
       </div>
     );
@@ -101,17 +103,17 @@ export function StopTen({ names, onDone }: Props) {
       <span className="handoff-phone" aria-hidden>
         🔒
       </span>
-      <p className="turn-banner">Locked in. No peeking at the time yet.</p>
+      <p className="turn-banner">{t("Locked in. No peeking at the time yet.", "ล็อกเวลาแล้ว ยังไม่เฉลยนะ")}</p>
       {player === 0 ? (
         <>
-          <p className="muted">Pass the phone to {names[1]}.</p>
+          <p className="muted">{t(`Pass the phone to ${names[1]}.`, `ส่งเครื่องให้ ${names[1]}`)}</p>
           <button type="button" className="btn btn--primary" onClick={nextPlayer}>
-            I’m {names[1]}, ready
+            {t(`I’m ${names[1]}, ready`, `ฉันคือ ${names[1]} พร้อมแล้ว`)}
           </button>
         </>
       ) : (
         <button type="button" className="btn btn--primary" onClick={reveal}>
-          Reveal both times
+          {t("Reveal both times", "เฉลยเวลาทั้งคู่")}
         </button>
       )}
     </div>

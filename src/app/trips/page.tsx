@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { T } from "../i18n";
 import Image from "next/image";
 import { ArrowIcon } from "../components/Icons";
 import { TRIPS } from "../data/trips";
@@ -13,8 +14,12 @@ export default function TripsPage() {
     <main className="page">
       <header className="page-head">
         <p className="eyebrow mono">travel · {TRIPS.length} plan{TRIPS.length === 1 ? "" : "s"}</p>
-        <h1>Trip plans</h1>
-        <p className="muted">Day-by-day trip plans with maps, times, transport and places to eat. Made for phones.</p>
+        <h1>
+          <T en="Trip plans" th="แพลนเที่ยว" />
+        </h1>
+        <p className="muted">
+          <T en="Day-by-day trip plans with maps, times, transport and places to eat. Made for phones." th="แพลนเที่ยวรายวัน มีแผนที่ เวลา การเดินทาง และร้านที่ต้องแวะ ออกแบบมาให้เปิดบนมือถือ" />
+        </p>
       </header>
 
       <ul className="trips">
@@ -43,7 +48,9 @@ export default function TripsPage() {
                     Open plan <ArrowIcon />
                   </span>
                 ) : (
-                  <span className="trip__soon mono">Coming soon</span>
+                  <span className="trip__soon mono">
+                    <T en="Coming soon" th="เร็ว ๆ นี้" />
+                  </span>
                 )}
               </span>
             </>

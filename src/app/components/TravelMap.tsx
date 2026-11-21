@@ -4,6 +4,7 @@ import { geoArea, geoCentroid, geoNaturalEarth1, geoPath } from "d3-geo";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { feature } from "topojson-client";
+import { useLang } from "../i18n";
 import type { GeometryCollection, Topology } from "topojson-specification";
 
 const STORE = "earth-travel-map";
@@ -52,11 +53,12 @@ const HIDDEN = new Set(["Antarctica", "Siachen Glacier", "Ashmore and Cartier Is
 type Country = { name: string; d: string; dot: [number, number] | null };
 
 export function TravelMap() {
+  const { t } = useLang();
   const [countries, setCountries] = useState<Country[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
-  const [title, setTitle] = useState("Places I’ve been");
+  const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [shape, setShape] = useState<"portrait" | "landscape">("portrait");
   const svgRef = useRef<SVGSVGElement>(null);
@@ -131,6 +133,7 @@ export function TravelMap() {
   }, [countries, query]);
 
   const count = picked.size;
+  const defaultTitle = t("Places I’ve been", "ประเทศที่ฉันเคยไป");
   const pct = Math.round((count / WORLD) * 100);
 
   // Draw the map onto a 1920×1080 canvas with a title, then save it as a PNG.
@@ -165,10 +168,10 @@ export function TravelMap() {
       ctx.fillRect(0, 0, cv.width, cv.height);
       ctx.fillStyle = C.text;
       ctx.font = `800 ${tall ? 72 : 64}px ${sans}`;
-      ctx.fillText(title.trim() || "Places I’ve been", left, tall ? 340 : 120);
+      ctx.fillText(title.trim() || defaultTitle, left, tall ? 340 : 120);
       ctx.fillStyle = C.visited;
       ctx.font = `600 ${tall ? 36 : 34}px ${mono}`;
-      ctx.fillText(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, left, tall ? 410 : 180);
+      ctx.fillText(t(`${count} ${count === 1 ? "country" : "countries"} · ${pct}% of the world`, `${count} ประเทศ · ${pct}% ของโลก`), left, tall ? 410 : 180);
       const mapW = tall ? 1000 : 1560;
       const mapH = (mapW / W) * H;
       const mapY = tall ? 470 : 215;
@@ -201,7 +204,7 @@ export function TravelMap() {
         if (names.length > shown.length) {
           const i = shown.length;
           ctx.fillStyle = C.muted;
-          ctx.fillText(`+${names.length - shown.length} more`, left + Math.floor(i / rows) * colW + 24, top + (i % rows) * lineH);
+          ctx.fillText(t(`+${names.length - shown.length} more`, `+อีก ${names.length - shown.length} ประเทศ`), left + Math.floor(i / rows) * colW + 24, top + (i % rows) * lineH);
         }
       }
       ctx.fillStyle = C.muted;
@@ -226,11 +229,11 @@ export function TravelMap() {
         <div className="tmap__stats">
           <div>
             <b className="mono">{count}</b>
-            <span>{count === 1 ? "country" : "countries"}</span>
+            <span>{t(count === 1 ? "country" : "countries", "ประเทศ")}</span>
           </div>
           <div>
             <b className="mono">{pct}%</b>
-            <span>of the world</span>
+            <span>{t("of the world", "ของโลก")}</span>
           </div>
           <div className="tmap__bar" aria-hidden>
             <i style={{ width: `${Math.min(100, pct)}%` }} />
@@ -238,7 +241,7 @@ export function TravelMap() {
         </div>
 
         <div className="tmap__map">
-          {!countries && <p className="tmap__loading muted">{failed ? "Couldn’t load the map. Refresh to try again." : "Loading the world…"}</p>}
+          {!countries && <p className="tmap__loading muted">{failed ? t("Couldn’t load the map. Refresh to try again.", "โหลดแผนที่ไม่ได้ ลองรีเฟรชอีกครั้ง") : t("Loading the world…", "กำลังโหลดแผนที่โลก…")}</p>}
           <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`World map with ${count} visited countries highlighted`}>
             <rect width={W} height={H} fill={C.sea} />
             {countries?.map((c) => {
@@ -261,19 +264,19 @@ export function TravelMap() {
 
         <div className="tmap__actions">
           <label className="tmap__title">
-            <span className="mono muted">Image title</span>
-            <input id="map-title" value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} />
+            <span className="mono muted">{t("Image title", "ชื่อบนรูป")}</span>
+            <input id="map-title" value={title} maxLength={40} placeholder={defaultTitle} onChange={(e) => setTitle(e.target.value)} />
           </label>
           <div className="tmap__shape" role="radiogroup" aria-label="Image shape">
             {(["portrait", "landscape"] as const).map((k) => (
               <button key={k} type="button" role="radio" aria-checked={shape === k} className={shape === k ? "is-on" : undefined} onClick={() => setShape(k)}>
                 <i className={`tmap__shape-icon is-${k}`} aria-hidden />
-                {k === "portrait" ? "Portrait 9:16" : "Landscape"}
+                {k === "portrait" ? t("Portrait 9:16", "แนวตั้ง 9:16") : t("Landscape", "แนวนอน")}
               </button>
             ))}
           </div>
           <button type="button" className="btn btn--primary" onClick={download} disabled={!countries || busy}>
-            {busy ? "Saving…" : "Download PNG"}
+            {busy ? t("Saving…", "กำลังบันทึก…") : t("Download PNG", "ดาวน์โหลดรูป")}
           </button>
         </div>
       </div>
@@ -281,15 +284,15 @@ export function TravelMap() {
       <div className="tmap__card">
         <label className="tmap__search">
           <span className="sr-only">Search countries</span>
-          <input id="country-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a country, or tap it on the map" autoComplete="off" />
+          <input id="country-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search a country, or tap it on the map", "ค้นหาประเทศ หรือแตะบนแผนที่")} autoComplete="off" />
         </label>
 
         {count > 0 && (
           <div className="tmap__picked">
             <div className="tmap__picked-head">
-              <span className="mono muted">Visited</span>
+              <span className="mono muted">{t("Visited", "เคยไปแล้ว")}</span>
               <button type="button" className="btn btn--text" onClick={() => setPicked(new Set())}>
-                Clear all
+                {t("Clear all", "ล้างทั้งหมด")}
               </button>
             </div>
             <ul>
@@ -327,7 +330,7 @@ export function TravelMap() {
               </li>
             );
           })}
-          {countries && matches.length === 0 && <li className="muted tmap__none">No country matches “{query}”.</li>}
+          {countries && matches.length === 0 && <li className="muted tmap__none">{t(`No country matches “${query}”.`, `ไม่พบประเทศที่ตรงกับ “${query}”`)}</li>}
         </ul>
       </div>
     </div>

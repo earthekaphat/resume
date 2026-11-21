@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLang } from "../i18n";
 
 const MAX = 10;
 const STORE = "earth-random-items";
@@ -32,6 +33,7 @@ function layout(n: number, w: number): Spot[] {
 }
 
 export function CardDraw() {
+  const { t } = useLang();
   const [items, setItems] = useState<string[]>(SAMPLE);
   const [draft, setDraft] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -90,12 +92,12 @@ export function CardDraw() {
     if (!parts.length) return;
     const room = MAX - items.length;
     if (room <= 0) {
-      setMsg(`You can add up to ${MAX}. Remove one first.`);
+      setMsg(t(`You can add up to ${MAX}. Remove one first.`, `ใส่ได้สูงสุด ${MAX} อัน ลบบางอันออกก่อน`));
       return;
     }
     const next = parts.slice(0, room);
     setItems([...items, ...next]);
-    setMsg(parts.length > room ? `Only ${room} added. The limit is ${MAX}.` : "");
+    setMsg(parts.length > room ? t(`Only ${room} added. The limit is ${MAX}.`, `เพิ่มได้แค่ ${room} อัน เพราะครบ ${MAX} แล้ว`) : "");
     setDraft("");
     reset();
   }
@@ -220,7 +222,7 @@ export function CardDraw() {
           }}
         >
           <label htmlFor="choice" className="mono muted">
-            Choices {items.length}/{MAX}
+            {t("Choices", "ตัวเลือก")} {items.length}/{MAX}
           </label>
           <div className="draw__row">
             <input
@@ -234,13 +236,13 @@ export function CardDraw() {
                   add(t);
                 }
               }}
-              placeholder={items.length >= MAX ? "That's 10 already" : "Type and press Enter (or paste a list)"}
+              placeholder={items.length >= MAX ? t("That’s 10 already", "ครบ 10 อันแล้ว") : t("Type and press Enter (or paste a list)", "พิมพ์แล้วกด Enter (วางหลายบรรทัดได้)")}
               maxLength={40}
               disabled={items.length >= MAX}
               autoComplete="off"
             />
             <button type="submit" className="btn btn--ghost" disabled={!draft.trim() || items.length >= MAX}>
-              Add
+              {t("Add", "เพิ่ม")}
             </button>
           </div>
         </form>
@@ -256,21 +258,21 @@ export function CardDraw() {
           ))}
         </ul>
         <p className="draw__msg" role="status">
-          {msg || (items.length < 2 ? "Add at least 2 choices to draw" : "")}
+          {msg || (items.length < 2 ? t("Add at least 2 choices to draw", "ใส่อย่างน้อย 2 อันเพื่อสุ่ม") : "")}
         </p>
 
         <div className="draw__actions">
           <button type="button" className="btn btn--primary" onClick={draw} disabled={!canDraw}>
-            {phase === "shuffling" ? "Shuffling…" : phase === "revealed" ? "Draw again" : "Shuffle and draw"}
+            {phase === "shuffling" ? t("Shuffling…", "กำลังสับไพ่…") : phase === "revealed" ? t("Draw again", "สุ่มอีกครั้ง") : t("Shuffle and draw", "สับไพ่แล้วสุ่ม")}
           </button>
           {phase === "revealed" && items.length > 2 && (
             <button type="button" className="btn btn--ghost" onClick={removeWinnerAndDraw}>
-              Remove this one
+              {t("Remove this one", "ตัดอันนี้ออก")}
             </button>
           )}
           {items.length > 0 && (
             <button type="button" className="btn btn--text" onClick={() => { setItems([]); reset(); setMsg(""); }}>
-              Clear all
+              {t("Clear all", "ล้างทั้งหมด")}
             </button>
           )}
         </div>
@@ -293,14 +295,14 @@ export function CardDraw() {
                   <span className="mono">?</span>
                 </div>
                 <div className="card__face">
-                  <span className="mono muted">result</span>
+                  <span className="mono muted">{t("result", "ผลลัพธ์")}</span>
                   <b>{it}</b>
                 </div>
               </div>
             </div>
           );
         })}
-        {items.length === 0 && <p className="table__empty">Add choices to deal cards onto the table</p>}
+        {items.length === 0 && <p className="table__empty">{t("Add choices to deal cards onto the table", "เพิ่มตัวเลือกเพื่อวางไพ่บนโต๊ะ")}</p>}
         {phase === "revealed" && winner !== null && (
           <p className="sr-only">The result is {items[winner]}</p>
         )}
@@ -308,7 +310,7 @@ export function CardDraw() {
 
       {history.length > 0 && (
         <div className="history">
-          <span className="mono muted">Recent</span>
+          <span className="mono muted">{t("Recent", "ผลล่าสุด")}</span>
           <ol>
             {history.map((h, i) => (
               <li key={i}>{h}</li>

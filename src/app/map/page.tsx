@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { T } from "../i18n";
 import { TravelMap } from "../components/TravelMap";
 
 export const metadata: Metadata = {
@@ -11,9 +12,14 @@ export default function MapPage() {
     <main className="page">
       <header className="page-head">
         <p className="eyebrow mono">tool · travel map</p>
-        <h1>Where have you been?</h1>
+        <h1>
+          <T en="Where have you been?" th="เคยไปประเทศไหนมาแล้วบ้าง?" />
+        </h1>
         <p className="muted">
-          Tap countries on the map or pick them from the list. Your picks are saved on this device. Download the map as an image when you’re done.
+          <T
+            en="Tap countries on the map or pick them from the list. Your picks are saved on this device. Download the map as an image when you’re done."
+            th="แตะประเทศบนแผนที่หรือเลือกจากรายการ ประเทศที่เลือกจะถูกจำไว้ในเครื่องนี้ เสร็จแล้วดาวน์โหลดแผนที่เป็นรูปได้"
+          />
         </p>
       </header>
       <TravelMap />

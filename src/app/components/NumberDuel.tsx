@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLang } from "../i18n";
 import { ReactionDuel } from "./ReactionDuel";
 import { StopTen } from "./StopTen";
 
@@ -38,7 +39,8 @@ function rangeOf(gs: Guess[]) {
 }
 
 export function NumberDuel() {
-  const [names, setNames] = useState<[string, string]>(["Player 1", "Player 2"]);
+  const { t } = useLang();
+  const [names, setNames] = useState<[string, string]>(["", ""]);
   const [mode, setMode] = useState<Mode | null>(null);
   const [wins, setWins] = useState<[number, number]>([0, 0]);
 
@@ -67,7 +69,9 @@ export function NumberDuel() {
     const id = requestAnimationFrame(() => {
       try {
         const saved = JSON.parse(localStorage.getItem(STORE) || "null");
-        if (Array.isArray(saved) && saved.length === 2) setNames([String(saved[0]), String(saved[1])]);
+        // Old saves stored the default labels; treat those as empty so they follow the language.
+        const clean = (v: unknown) => (/^(Player|ผู้เล่น) [12]$/.test(String(v)) ? "" : String(v));
+        if (Array.isArray(saved) && saved.length === 2) setNames([clean(saved[0]), clean(saved[1])]);
       } catch {}
       loaded.current = true;
     });
@@ -83,7 +87,7 @@ export function NumberDuel() {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const nameOf = (p: 0 | 1) => names[p].trim() || `Player ${p + 1}`;
+  const nameOf = (p: 0 | 1) => names[p].trim() || t(`Player ${p + 1}`, `ผู้เล่น ${p + 1}`);
 
   function finish(loser: 0 | 1 | null, m: Mode, detail?: string) {
     setResult({ loser, mode: m, detail });
@@ -210,10 +214,11 @@ export function NumberDuel() {
           <div className="name-row">
             {[0, 1].map((i) => (
               <label key={i} className="name-field">
-                <span className="mono muted">Player {i + 1}</span>
+                <span className="mono muted">{t(`Player ${i + 1}`, `ผู้เล่น ${i + 1}`)}</span>
                 <input
                   id={`player-${i}`}
                   value={names[i]}
+                  placeholder={t(`Player ${i + 1}`, `ผู้เล่น ${i + 1}`)}
                   maxLength={16}
                   onChange={(e) => {
                     const v: [string, string] = [names[0], names[1]];
@@ -228,9 +233,9 @@ export function NumberDuel() {
 
         <div className="modes">
           <button type="button" className="mode-card mode-card--stop" onClick={() => startQuick("stop")}>
-            <span className="tile__kicker mono">quick · new</span>
-            <b>Stop at 10.00</b>
-            <span className="muted">Start the clock, the digits vanish after 3 seconds, and you stop it by feel. Farthest from 10.00 loses.</span>
+            <span className="tile__kicker mono">{t("quick · new", "เกมสั้น · ใหม่")}</span>
+            <b>{t("Stop at 10.00", "หยุดเวลา 10.00")}</b>
+            <span className="muted">{t("Start the clock, the digits vanish after 3 seconds, and you stop it by feel. Farthest from 10.00 loses.", "กดเริ่มนาฬิกา ตัวเลขจะหายไปหลัง 3 วินาที แล้วนับในใจกดหยุดให้ตรงที่สุด ใครห่างจาก 10.00 มากสุดแพ้")}</span>
             <span className="mode-art mono" aria-hidden>
               <i>9.</i>
               <i>??</i>
@@ -238,9 +243,9 @@ export function NumberDuel() {
             </span>
           </button>
           <button type="button" className="mode-card mode-card--react" onClick={() => startQuick("react")}>
-            <span className="tile__kicker mono">quick · new</span>
-            <b>Reaction Duel</b>
-            <span className="muted">Phone flat between you, one half each. Tap your side the moment it turns green. Tap early and you lose.</span>
+            <span className="tile__kicker mono">{t("quick · new", "เกมสั้น · ใหม่")}</span>
+            <b>{t("Reaction Duel", "ดวลความไว")}</b>
+            <span className="muted">{t("Phone flat between you, one half each. Tap your side the moment it turns green. Tap early and you lose.", "วางมือถือไว้ตรงกลาง คนละครึ่งจอ จอเขียวเมื่อไหร่ให้แตะฝั่งตัวเองให้ไวที่สุด แตะก่อนจอเขียวแพ้ทันที")}</span>
             <span className="mode-art mono" aria-hidden>
               <i className="art-red" />
               <i className="art-green" />
@@ -248,10 +253,10 @@ export function NumberDuel() {
             </span>
           </button>
           <button type="button" className="mode-card" onClick={startDuel}>
-            <span className="tile__kicker mono">mode 1</span>
-            <b>Mind Duel</b>
+            <span className="tile__kicker mono">{t("mode 1", "โหมด 1")}</span>
+            <b>{t("Mind Duel", "ทายใจ")}</b>
             <span className="muted">
-              Each player secretly locks in a number from 1 to 30, then you take turns guessing the other’s. The app says too high or too low. First to guess right wins.
+              {t("Each player secretly locks in a number from 1 to 30, then you take turns guessing the other’s. The app says too high or too low. First to guess right wins.", "ต่างคนต่างแอบล็อกเลข 1–30 แล้วผลัดกันทายเลขของอีกฝ่าย แอปบอกว่าสูงไปหรือต่ำไป ใครทายถูกก่อนชนะ")}
             </span>
             <span className="mode-art mono" aria-hidden>
               <i>?</i>
@@ -260,9 +265,9 @@ export function NumberDuel() {
             </span>
           </button>
           <button type="button" className="mode-card mode-card--bomb" onClick={startBomb}>
-            <span className="tile__kicker mono">mode 2</span>
-            <b>Number Bomb</b>
-            <span className="muted">The app hides a bomb under one number. Take turns picking; each number can be picked once. Whoever hits the bomb loses.</span>
+            <span className="tile__kicker mono">{t("mode 2", "โหมด 2")}</span>
+            <b>{t("Number Bomb", "เลขระเบิด")}</b>
+            <span className="muted">{t("The app hides a bomb under one number. Take turns picking; each number can be picked once. Whoever hits the bomb loses.", "แอปซ่อนระเบิดไว้ใต้เลข 1 ตัว ผลัดกันเลือกเลข เลขละครั้ง ใครเปิดโดนระเบิดแพ้")}</span>
             <span className="mode-art mono" aria-hidden>
               <i>4</i>
               <i>💣</i>
@@ -281,37 +286,37 @@ export function NumberDuel() {
         <div className="game-card result-card">
           {tie ? (
             <>
-              <p className="result-big">It’s a tie!</p>
+              <p className="result-big">{t("It’s a tie!", "เสมอ!")}</p>
               <p className="muted">
-                {result.mode === "duel" ? "You both guessed right in the same round. Settle it with Number Bomb." : "Dead even. Go again."}
+                {result.mode === "duel" ? t("You both guessed right in the same round. Settle it with Number Bomb.", "ทายถูกในตาเดียวกันทั้งคู่ ตัดสินกันต่อด้วยเลขระเบิด") : t("Dead even. Go again.", "สูสีกันพอดี เล่นใหม่อีกตา")}
               </p>
             </>
           ) : (
             <>
-              <p className="result-sub mono">🏆 {nameOf(other(result.loser as 0 | 1))} wins</p>
-              <p className="result-big">{nameOf(result.loser as 0 | 1)} loses</p>
+              <p className="result-sub mono">🏆 {nameOf(other(result.loser as 0 | 1))} {t("wins", "ชนะ")}</p>
+              <p className="result-big">{nameOf(result.loser as 0 | 1)} {t("loses", "แพ้")}</p>
             </>
           )}
           {result.mode === "duel" && secrets[0] !== null && secrets[1] !== null && (
             <p className="muted mono reveal">
-              Secret numbers: {nameOf(0)} = {secrets[0]} · {nameOf(1)} = {secrets[1]}
+              {t("Secret numbers", "เลขลับ")}: {nameOf(0)} = {secrets[0]} · {nameOf(1)} = {secrets[1]}
             </p>
           )}
-          {result.mode === "bomb" && <p className="muted mono reveal">The bomb was under {bomb}</p>}
+          {result.mode === "bomb" && <p className="muted mono reveal">{t(`The bomb was under ${bomb}`, `ระเบิดอยู่ที่เลข ${bomb}`)}</p>}
           {result.detail && <p className="muted mono reveal">{result.detail}</p>}
           {scoreboard}
           <div className="game-actions">
             {tie && result.mode === "duel" ? (
               <button type="button" className="btn btn--primary" onClick={startBomb}>
-                Play Number Bomb
+                {t("Play Number Bomb", "ตัดสินด้วยเลขระเบิด")}
               </button>
             ) : (
               <button type="button" className="btn btn--primary" onClick={rematch}>
-                Play again
+                {t("Play again", "เล่นอีกตา")}
               </button>
             )}
             <button type="button" className="btn btn--ghost" onClick={() => setMode(null)}>
-              Change mode
+              {t("Change mode", "เปลี่ยนเกม")}
             </button>
           </div>
         </div>
@@ -337,10 +342,10 @@ export function NumberDuel() {
         {scoreboard}
         <div className={`game-card bomb-card${boom ? " is-boom" : ""}`}>
           <p className="turn-banner">
-            <b>{nameOf(turn)}</b>, pick a number
+            {t("", "ตา ")}<b>{nameOf(turn)}</b>{t(", pick a number", " เลือกเลข")}
           </p>
           <p className="muted mono">
-            The bomb is under one of the {10 - used.size} numbers left
+            {t(`The bomb is under one of the ${10 - used.size} numbers left`, `ระเบิดซ่อนอยู่ใต้เลขที่เหลือ ${10 - used.size} ตัว`)}
           </p>
           <div className="pad pad--bomb">
             {BOMB_NUMS.map((d) => {
@@ -353,7 +358,7 @@ export function NumberDuel() {
                   className={`pad-key${out ? " is-out" : ""}${hit ? " is-bomb" : ""}`}
                   disabled={out || boom}
                   onClick={() => pickBomb(d)}
-                  aria-label={`Number ${d}`}
+                  aria-label={t(`Number ${d}`, `เลข ${d}`)}
                 >
                   {hit ? "💥" : d}
                 </button>
@@ -384,11 +389,11 @@ export function NumberDuel() {
             📱
           </span>
           <p className="turn-banner">
-            Pass the phone to <b>{nameOf(picker)}</b>
+            {t("Pass the phone to ", "ส่งเครื่องให้ ")}<b>{nameOf(picker)}</b>
           </p>
-          <p className="muted">{nameOf(other(picker))}, look away. No peeking.</p>
+          <p className="muted">{nameOf(other(picker))}{t(", look away. No peeking.", " หันไปทางอื่นก่อน ห้ามแอบดู")}</p>
           <button type="button" className="btn btn--primary" onClick={() => setStep("secret")}>
-            I’m {nameOf(picker)}, ready
+            {t(`I’m ${nameOf(picker)}, ready`, `ฉันคือ ${nameOf(picker)} พร้อมแล้ว`)}
           </button>
         </div>
       </div>
@@ -400,7 +405,7 @@ export function NumberDuel() {
       <div className="game">
         <div className="game-card">
           <p className="turn-banner">
-            <b>{nameOf(picker)}</b>, pick your secret number (1–30)
+            <b>{nameOf(picker)}</b>{t(", pick your secret number (1–30)", " แอบเลือกเลขลับ (1–30)")}
           </p>
           <div className="pad pad--30">
             {DUEL_NUMS.map((d) => (
@@ -417,7 +422,7 @@ export function NumberDuel() {
           </div>
           <div className="game-actions">
             <button type="button" className="btn btn--primary" disabled={draft === null} onClick={lockSecret}>
-              Lock it in and hide
+              {t("Lock it in and hide", "ล็อกเลขแล้วซ่อนจอ")}
             </button>
           </div>
         </div>
@@ -427,16 +432,16 @@ export function NumberDuel() {
 
   const [lo, hi] = rangeOf(guesses[turn]);
   const tried = new Set(guesses[turn].map((g) => g.n));
-  const hintText = (g: Guess) => (g.res === "hit" ? "Correct!" : g.res === "high" ? "Too high ↓" : "Too low ↑");
+  const hintText = (g: Guess) => (g.res === "hit" ? t("Correct!", "ถูก!") : g.res === "high" ? t("Too high ↓", "สูงไป ↓") : t("Too low ↑", "ต่ำไป ↑"));
 
   return (
     <div className="game">
       {scoreboard}
       <div className="game-card">
         <p className="turn-banner">
-          <b>{nameOf(turn)}</b>, guess {nameOf(other(turn))}’s number
+          {t("", "ตา ")}<b>{nameOf(turn)}</b>{t(`, guess ${nameOf(other(turn))}’s number`, ` ทายเลขของ ${nameOf(other(turn))}`)}
         </p>
-        {finalChance && <p className="final-note">{nameOf(other(turn))} got it right. This is your last chance to tie!</p>}
+        {finalChance && <p className="final-note">{t(`${nameOf(other(turn))} got it right. This is your last chance to tie!`, `${nameOf(other(turn))} ทายถูกแล้ว นี่คือโอกาสสุดท้ายที่จะเสมอ!`)}</p>}
         <div className="pad pad--30">
           {DUEL_NUMS.map((d) => {
             const out = d < lo || d > hi || tried.has(d);
@@ -459,7 +464,7 @@ export function NumberDuel() {
         <div className="duel-logs">
           {[0, 1].map((p) => (
             <div key={p} className={`duel-log${turn === p ? " is-turn" : ""}`}>
-              <span className="mono muted">{nameOf(p as 0 | 1)}’s guesses</span>
+              <span className="mono muted">{t(`${nameOf(p as 0 | 1)}’s guesses`, `${nameOf(p as 0 | 1)} ทาย`)}</span>
               <ol>
                 {guesses[p].map((g, i) => (
                   <li key={i} className={`hint-${g.res}`}>

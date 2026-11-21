@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, IBM_Plex_Sans_Thai, JetBrains_Mono } from "next/font/google";
 import { SiteHeader } from "./components/SiteHeader";
+import { LangProvider } from "./i18n";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -43,12 +44,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
-        <SiteHeader />
-        {children}
-        <footer className="site-footer">
-          <span>© {new Date().getFullYear()} Ekaphat Seamthong</span>
-          <span className="mono">all checks passed ✓</span>
-        </footer>
+        <LangProvider>
+          <SiteHeader />
+          {children}
+          <footer className="site-footer">
+            <span>© {new Date().getFullYear()} Ekaphat Seamthong</span>
+            <span className="mono">all checks passed ✓</span>
+          </footer>
+        </LangProvider>
       </body>
     </html>
   );

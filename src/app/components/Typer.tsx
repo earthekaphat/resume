@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLang } from "../i18n";
+
+// Picks the phrase list for the current language and restarts typing when it changes.
+export function Typer({ phrases, phrasesTh }: { phrases: string[]; phrasesTh?: string[] }) {
+  const { lang } = useLang();
+  const list = lang === "th" && phrasesTh ? phrasesTh : phrases;
+  return <TyperLoop key={lang} phrases={list} />;
+}
 
 // Types each phrase, holds it, deletes it, then moves to the next one.
-export function Typer({ phrases }: { phrases: string[] }) {
+function TyperLoop({ phrases }: { phrases: string[] }) {
   const [i, setI] = useState(0);
   const [text, setText] = useState(phrases[0]);
   const [deleting, setDeleting] = useState(false);
