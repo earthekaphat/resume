@@ -641,3 +641,15 @@ a.trip:hover .trip__cover img { transform: scale(1.05); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Lock countdown: a ring that drains as the cooldown runs out */
+.gate__timer {
+  --p: 1;
+  width: 128px; height: 128px; margin: 4px auto 2px; border-radius: 50%;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(closest-side, var(--surface) 82%, transparent 83%),
+    conic-gradient(var(--pink) calc(var(--p) * 360deg), color-mix(in srgb, var(--pink) 14%, transparent) 0);
+  transition: background .9s linear;
+}
+.gate__timer span { font-size: 30px; font-weight: 700; letter-spacing: .02em; font-variant-numeric: tabular-nums; }

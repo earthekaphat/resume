@@ -8,6 +8,7 @@ import { useLang } from "../i18n";
 const BIRTHDAY_HASH = "c500e9803e1c7b35c71fe048f6c1d48fe50b772e7a16da372cdc50cfe1fcac56";
 const STORE = "earth-friend-gate";
 const MAX_TRIES = 3;
+const LOCK_MS = 5 * 60 * 1000;
 
 type State = "unknown" | "ok" | "locked";
 type Step = "ask" | "birthday" | "welcome" | "denied";
@@ -29,24 +30,68 @@ export function FriendGate({ children }: { children: React.ReactNode }) {
   const [tries, setTries] = useState(0);
   const [shake, setShake] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [until, setUntil] = useState(0);
+  const [left, setLeft] = useState(0);
   const confetti = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
       try {
         const v = localStorage.getItem(STORE);
-        if (v === "ok" || v === "locked") setState(v);
+        if (v === "ok") setState("ok");
+        else if (v?.startsWith("locked:") && Number(v.slice(7)) > Date.now()) {
+          setState("locked");
+          setUntil(Number(v.slice(7)));
+        } else if (v) localStorage.removeItem(STORE);
       } catch {}
     }, 0);
     return () => clearTimeout(id);
   }, []);
 
-  function remember(v: "ok" | "locked") {
+  function remember(v: "ok") {
     setState(v);
     try {
       localStorage.setItem(STORE, v);
     } catch {}
   }
+
+  // Wrong answers (or "No") lock the tools on this device for a few minutes.
+  function lock() {
+    const end = Date.now() + LOCK_MS;
+    setState("locked");
+    setUntil(end);
+    setLeft(Math.ceil(LOCK_MS / 1000));
+    setStep("denied");
+    try {
+      localStorage.setItem(STORE, `locked:${end}`);
+    } catch {}
+  }
+
+  function unlockForRetry() {
+    setState("unknown");
+    setUntil(0);
+    setTries(0);
+    setDay(0);
+    setMonth(0);
+    try {
+      localStorage.removeItem(STORE);
+    } catch {}
+  }
+
+  // Count the lock down every second while the popup is showing it.
+  useEffect(() => {
+    if (state !== "locked" || !until) return;
+    const tick = () => {
+      const s = Math.ceil((until - Date.now()) / 1000);
+      if (s <= 0) {
+        unlockForRetry();
+        setStep("ask");
+      } else setLeft(s);
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [state, until]);
 
   // Stop the first touch on the tools and ask instead.
   function intercept(e: React.SyntheticEvent) {
@@ -54,7 +99,11 @@ export function FriendGate({ children }: { children: React.ReactNode }) {
     e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).blur?.();
-    setStep(state === "locked" ? "denied" : "ask");
+    if (state === "locked" && until > Date.now()) setStep("denied");
+    else {
+      if (state === "locked") unlockForRetry();
+      setStep("ask");
+    }
     setOpen(true);
   }
 
@@ -72,10 +121,7 @@ export function FriendGate({ children }: { children: React.ReactNode }) {
     const n = tries + 1;
     setTries(n);
     setShake(true);
-    if (n >= MAX_TRIES) {
-      remember("locked");
-      setStep("denied");
-    }
+    if (n >= MAX_TRIES) lock();
   }
 
   function burst() {
@@ -145,9 +191,7 @@ export function FriendGate({ children }: { children: React.ReactNode }) {
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    onClick={() => {
-                      setStep("denied");
-                    }}
+                    onClick={lock}
                   >
                     {t("No", "ไม่รู้จัก")}
                   </button>
@@ -202,15 +246,17 @@ export function FriendGate({ children }: { children: React.ReactNode }) {
               <>
                 <p className="gate__kicker mono">{t("access denied", "ใช้งานไม่ได้")}</p>
                 <h2 id="gate-title">{t("Sorry, friends of Earth only", "ขอโทษนะ ใช้ได้เฉพาะเพื่อนของเอิร์ธ")}</h2>
-                <p className="muted">{t("You can still look around the rest of the site.", "ยังดูส่วนอื่นของเว็บได้ตามปกติ")}</p>
+                <div className="gate__timer" role="timer" aria-live="off" style={{ "--p": left / (LOCK_MS / 1000) } as React.CSSProperties}>
+                  <span className="mono">
+                    {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+                  </span>
+                </div>
+                <p className="muted">{t("Try again when the timer runs out. You can still look around the rest of the site.", "ลองใหม่ได้เมื่อหมดเวลา ระหว่างนี้ยังดูส่วนอื่นของเว็บได้ตามปกติ")}</p>
                 <div className="gate__actions">
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    onClick={() => {
-                      if (state !== "locked") remember("locked");
-                      setOpen(false);
-                    }}
+                    onClick={() => setOpen(false)}
                   >
                     {t("Close", "ปิด")}
                   </button>
