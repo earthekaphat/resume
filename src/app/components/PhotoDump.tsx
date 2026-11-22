@@ -3,31 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "../i18n";
 import { deleteMonth, loadMonth, saveMonth, shrinkPhoto } from "../photoStore";
+import { renderDump, THEMES, type DumpInput, type ThemeId } from "../dumpThemes";
 import { ShapePicker } from "./TravelMap";
 
 const SITE_URL = "earthekaphat.vercel.app/map";
-const C = { bg: "#0E151C", text: "#E8EEF5", muted: "#8D9BAB", accent: "#3DDC97", cell: "#1A2430", hot: "#FF5A5F" };
+const THEME_STORE = "earth-dump-theme";
 
 const keyOf = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, "0")}`;
-
-function loadImg(src: string) {
-  return new Promise<HTMLImageElement>((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = src;
-  });
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
 
 // A month calendar where each day can hold a photo instead of its number.
 export function PhotoDump() {
@@ -43,12 +25,18 @@ export function PhotoDump() {
   const manyRef = useRef<HTMLInputElement>(null);
   const target = useRef<number | null>(null);
   const ready = useRef(false);
+  const [theme, setTheme] = useState<ThemeId>("midnight");
+  const [preview, setPreview] = useState<string | null>(null);
 
   // Start on the current month (after first paint, so the prerendered HTML matches).
   useEffect(() => {
     const id = window.setTimeout(() => {
       const now = new Date();
       setYm({ y: now.getFullYear(), m: now.getMonth() });
+      try {
+        const saved = localStorage.getItem(THEME_STORE);
+        if (THEMES.some((x) => x.id === saved)) setTheme(saved as ThemeId);
+      } catch {}
     }, 0);
     return () => clearTimeout(id);
   }, []);
@@ -80,7 +68,55 @@ export function PhotoDump() {
     (empty ? deleteMonth(key) : saveMonth(key, { title, photos })).catch(() => {});
   }, [ym, title, photos]);
 
-  if (!ym) return <div className="tmap__card dump dump--loading" />;
+  // Everything the image needs, or null before the month is known.
+  const input: DumpInput | null = ym
+    ? (() => {
+        const d = new Date(ym.y, ym.m, 1);
+        const n = Object.keys(photos).length;
+        const monthYear = new Intl.DateTimeFormat(lang, { month: "long", year: "numeric" }).format(d);
+        const short = new Intl.DateTimeFormat(lang, { month: "short" }).format(d);
+        return {
+          y: ym.y,
+          m: ym.m,
+          title: title.trim() || `${short} dump`,
+          custom: !!title.trim(),
+          monthName: new Intl.DateTimeFormat(lang, { month: "long" }).format(d),
+          monthYear,
+          subtitle: t(`${monthYear} · ${n} ${n === 1 ? "day" : "days"}`, `${monthYear} · ${n} วัน`),
+          photos,
+          shape,
+          lang,
+          site: SITE_URL,
+          theme,
+        };
+      })()
+    : null;
+  const inputKey = input ? JSON.stringify({ ...input, photos: Object.keys(photos).map((k) => k + photos[Number(k)].length) }) : "";
+
+  // Redraw the small preview shortly after anything changes.
+  useEffect(() => {
+    if (!input) return;
+    let alive = true;
+    let url: string | null = null;
+    const id = window.setTimeout(async () => {
+      try {
+        const cv = await renderDump(input);
+        const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/jpeg", 0.8));
+        if (!alive || !blob) return;
+        url = URL.createObjectURL(blob);
+        setPreview(url);
+      } catch {}
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+      if (url) setTimeout(() => URL.revokeObjectURL(url as string), 1000);
+    };
+    // inputKey stands in for input, which is a new object every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputKey]);
+
+  if (!ym || !input) return <div className="tmap__card dump dump--loading" />;
 
   const { y, m } = ym;
   const days = new Date(y, m + 1, 0).getDate();
@@ -129,68 +165,23 @@ export function PhotoDump() {
     }
   }
 
+  function pickTheme(id: ThemeId) {
+    setTheme(id);
+    try {
+      localStorage.setItem(THEME_STORE, id);
+    } catch {}
+  }
+
   async function download() {
+    if (!input) return;
     setBusy(true);
     try {
-      const tall = shape === "portrait";
-      const cv = document.createElement("canvas");
-      cv.width = tall ? 1080 : 1920;
-      cv.height = tall ? 1920 : 1080;
-      const ctx = cv.getContext("2d");
-      if (!ctx) throw new Error("no canvas");
-      const sans = "system-ui, -apple-system, Segoe UI, sans-serif";
-      const mono = "ui-monospace, Menlo, monospace";
-      ctx.fillStyle = C.bg;
-      ctx.fillRect(0, 0, cv.width, cv.height);
-      const rows = Math.ceil((lead + days) / 7);
-      const gap = tall ? 10 : 10;
-      // Portrait: title on top, grid below (inside the story-safe area). Landscape: title left, grid right.
-      const cell = tall ? (cv.width - 128 - gap * 6) / 7 : Math.min((cv.height - 150 - gap * (rows - 1)) / rows, 170);
-      const gx = tall ? 64 : cv.width - 80 - (cell * 7 + gap * 6);
-      const gy = tall ? 560 : 110;
-      ctx.fillStyle = C.text;
-      ctx.font = `800 ${tall ? 110 : 96}px ${sans}`;
-      const tx = tall ? 64 : 80;
-      ctx.fillText(title.trim() || defaultTitle, tx, tall ? 380 : 230, tall ? 952 : gx - 120);
-      ctx.fillStyle = C.accent;
-      ctx.font = `600 ${tall ? 34 : 32}px ${mono}`;
-      ctx.fillText(t(`${monthLong} · ${filled} ${filled === 1 ? "day" : "days"}`, `${monthLong} · ${filled} วัน`), tx, tall ? 440 : 290);
-      ctx.fillStyle = C.muted;
-      ctx.font = `600 ${tall ? 26 : 22}px ${mono}`;
-      ctx.textAlign = "center";
-      weekdays.forEach((w, i) => ctx.fillText(w, gx + i * (cell + gap) + cell / 2, gy - 18));
-      ctx.textAlign = "left";
-      const imgs = await Promise.all(Object.entries(photos).map(async ([d, src]) => [Number(d), await loadImg(src)] as const));
-      const byDay = new Map(imgs);
-      for (let d = 1; d <= days; d++) {
-        const slot = lead + d - 1;
-        const x = gx + (slot % 7) * (cell + gap);
-        const yy = gy + Math.floor(slot / 7) * (cell + gap);
-        const img = byDay.get(d);
-        ctx.save();
-        roundRect(ctx, x, yy, cell, cell, cell * 0.16);
-        ctx.clip();
-        if (img) ctx.drawImage(img, x, yy, cell, cell);
-        else {
-          ctx.fillStyle = C.cell;
-          ctx.fillRect(x, yy, cell, cell);
-        }
-        ctx.restore();
-        ctx.font = `700 ${Math.round(cell * 0.2)}px ${sans}`;
-        ctx.fillStyle = img ? "#FFFFFF" : C.muted;
-        ctx.shadowColor = img ? "rgba(0,0,0,.6)" : "transparent";
-        ctx.shadowBlur = img ? 6 : 0;
-        ctx.fillText(String(d), x + cell * 0.1, yy + cell * 0.27);
-        ctx.shadowBlur = 0;
-      }
-      ctx.fillStyle = C.muted;
-      ctx.font = `500 ${tall ? 26 : 22}px ${mono}`;
-      ctx.fillText(SITE_URL, tall ? 64 : 80, tall ? cv.height - 270 : cv.height - 36);
+      const cv = await renderDump(input);
       const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/png"));
       if (!blob) throw new Error("no image");
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `${keyOf(y, m)}-dump-${shape}.png`;
+      a.download = `${keyOf(y, m)}-dump-${theme}-${shape}.png`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     } finally {
@@ -279,6 +270,24 @@ export function PhotoDump() {
           )}
         </div>
         <p className="dump__hint muted">{t("Tap a day to add its photo. Photos stay on this device.", "แตะวันที่เพื่อใส่รูป รูปจะเก็บอยู่ในเครื่องนี้เท่านั้น")}</p>
+
+        <div className="dump__style">
+          <span className="mono muted">{t("Pick a style", "เลือกสไตล์")}</span>
+          <div className="dump__themes" role="radiogroup" aria-label={t("Style", "สไตล์")}>
+            {THEMES.map((x) => (
+              <button key={x.id} type="button" role="radio" aria-checked={theme === x.id} className={theme === x.id ? "is-on" : undefined} onClick={() => pickTheme(x.id)}>
+                <i style={{ background: `linear-gradient(135deg, ${x.sw[0]} 50%, ${x.sw[1]} 50%)` }} aria-hidden>
+                  {x.icon}
+                </i>
+                {t(x.en, x.th)}
+              </button>
+            ))}
+          </div>
+          <figure className={`dump__preview is-${shape}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- a local blob preview */}
+            {preview ? <img key={preview} src={preview} alt={t("Preview of the image", "ตัวอย่างรูป")} /> : <span className="dump__preview-wait" />}
+          </figure>
+        </div>
 
         <div className="tmap__actions">
           <label className="tmap__title">
