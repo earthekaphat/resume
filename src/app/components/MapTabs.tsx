@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "../i18n";
+import { FriendGate } from "./FriendGate";
+import { PhotoDump } from "./PhotoDump";
 import { TravelCalendar } from "./TravelCalendar";
 import { TravelMap } from "./TravelMap";
 
-type Tab = "world" | "thailand" | "calendar";
+type Tab = "world" | "thailand" | "calendar" | "dump";
 const TABS: { id: Tab; en: string; th: string; icon: string }[] = [
   { id: "world", en: "World", th: "โลก", icon: "🌍" },
   { id: "thailand", en: "Thailand", th: "ประเทศไทย", icon: "🇹🇭" },
   { id: "calendar", en: "Calendar", th: "ปฏิทิน", icon: "📅" },
+  { id: "dump", en: "Photo dump", th: "Photo dump", icon: "📸" },
 ];
 const STORE = "earth-map-tab";
 
@@ -48,9 +51,12 @@ export function MapTabs() {
           </button>
         ))}
       </div>
-      {tab === "world" && <TravelMap key="world" kind="world" />}
-      {tab === "thailand" && <TravelMap key="thailand" kind="thailand" />}
-      {tab === "calendar" && <TravelCalendar />}
+      <FriendGate>
+        {tab === "world" && <TravelMap key="world" kind="world" />}
+        {tab === "thailand" && <TravelMap key="thailand" kind="thailand" />}
+        {tab === "calendar" && <TravelCalendar />}
+        {tab === "dump" && <PhotoDump />}
+      </FriendGate>
     </div>
   );
 }
