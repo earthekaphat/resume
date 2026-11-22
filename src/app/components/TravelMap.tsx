@@ -6,10 +6,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import { useLang } from "../i18n";
+import { MAP_THEMES, renderMap, type MapInput, type MapThemeId } from "../mapThemes";
+import { saveCanvas, StylePicker, toPreviewUrl } from "./StylePicker";
 
 export type MapKind = "world" | "thailand";
 
 const SITE_URL = "earthekaphat.vercel.app/map";
+const THEME_STORE = "earth-map-theme";
 // Fixed palette so the on-page map and the downloaded image match.
 const C = { sea: "#0E151C", land: "#2A3643", visited: "#3DDC97", edge: "#0E151C", dot: "#3DDC97", text: "#E8EEF5", muted: "#8D9BAB" };
 
@@ -136,7 +139,8 @@ export function TravelMap({ kind = "world" }: { kind?: MapKind }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [shape, setShape] = useState<"portrait" | "landscape">("portrait");
-  const svgRef = useRef<SVGSVGElement>(null);
+  const [theme, setTheme] = useState<MapThemeId>("midnight");
+  const [preview, setPreview] = useState<string | null>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -156,6 +160,8 @@ export function TravelMap({ kind = "world" }: { kind?: MapKind }) {
         const saved = JSON.parse(localStorage.getItem(cfg.store) || "null");
         if (saved && Array.isArray(saved.picked)) setPicked(new Set(saved.picked.map(String)));
         if (saved && typeof saved.title === "string") setTitle(saved.title);
+        const th = localStorage.getItem(THEME_STORE);
+        if (MAP_THEMES.some((x) => x.id === th)) setTheme(th as MapThemeId);
       } catch {}
       loaded.current = true;
     }, 0);
@@ -196,100 +202,58 @@ export function TravelMap({ kind = "world" }: { kind?: MapKind }) {
   const pct = Math.round((count / cfg.total) * 100);
   const unitWord = t(count === 1 ? cfg.unit.one : cfg.unit.many, cfg.unit.th);
 
-  // Names in columns, with "+N more" when they run out of room.
-  function drawNames(ctx: CanvasRenderingContext2D, names: string[], x0: number, top: number, width: number, bottom: number, cols: number, font: string) {
-    const lineH = 46;
-    const maxRows = Math.max(1, Math.floor((bottom - top) / lineH));
-    const room = maxRows * cols;
-    const rows = Math.min(maxRows, Math.max(1, Math.ceil(names.length / cols)));
-    const shown = names.length > room ? names.slice(0, room - 1) : names;
-    ctx.font = font;
-    const colW = width / cols;
-    shown.forEach((n, i) => {
-      const x = x0 + Math.floor(i / rows) * colW;
-      const y = top + (i % rows) * lineH;
-      ctx.fillStyle = C.visited;
-      ctx.beginPath();
-      ctx.arc(x + 7, y - 9, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = C.text;
-      let label = n;
-      while (ctx.measureText(label).width > colW - 36 && label.length > 4) label = label.slice(0, -2) + "…";
-      ctx.fillText(label, x + 24, y);
-    });
-    if (names.length > shown.length) {
-      const i = shown.length;
-      ctx.fillStyle = C.muted;
-      ctx.fillText(t(`+${names.length - shown.length} more`, `+อีก ${names.length - shown.length}`), x0 + Math.floor(i / rows) * colW + 24, top + (i % rows) * lineH);
-    }
+  const input: MapInput | null = regions
+    ? {
+        kind,
+        regions,
+        picked,
+        W,
+        H,
+        title: title.trim() || defaultTitle,
+        subtitle: t(`${count} ${unitWord} · ${pct}% ${cfg.whole[0]}`, `${count} ${cfg.unit.th} · ${pct}% ${cfg.whole[1]}`),
+        names: [...picked].map(labelOf).sort((a, b) => a.localeCompare(b, lang)),
+        more: (n) => t(`+${n} more`, `+อีก ${n}`),
+        shape,
+        site: SITE_URL,
+        theme,
+      }
+    : null;
+  const inputKey = input ? JSON.stringify([kind, [...picked].sort(), input.title, input.subtitle, lang, shape, theme]) : "";
+
+  // Redraw the preview shortly after anything changes.
+  useEffect(() => {
+    if (!input) return;
+    let alive = true;
+    let url: string | null = null;
+    const id = window.setTimeout(async () => {
+      try {
+        url = await toPreviewUrl(await renderMap(input));
+        if (alive && url) setPreview(url);
+      } catch {}
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+      if (url) setTimeout(() => URL.revokeObjectURL(url as string), 1000);
+    };
+    // inputKey stands in for input, which is a new object every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputKey]);
+
+  function pickTheme(id: MapThemeId) {
+    setTheme(id);
+    try {
+      localStorage.setItem(THEME_STORE, id);
+    } catch {}
   }
 
   // Portrait is a 1080×1920 Instagram story (content kept clear of the top and bottom
   // ~250px the story UI covers); landscape is 1920×1080.
   async function download() {
-    const svg = svgRef.current;
-    if (!svg) return;
+    if (!input) return;
     setBusy(true);
     try {
-      const clone = svg.cloneNode(true) as SVGSVGElement;
-      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-      clone.setAttribute("width", String(W));
-      clone.setAttribute("height", String(H));
-      const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml" }));
-      const img = new Image();
-      await new Promise<void>((res, rej) => {
-        img.onload = () => res();
-        img.onerror = () => rej(new Error("map image failed"));
-        img.src = url;
-      });
-      const tall = shape === "portrait";
-      const cv = document.createElement("canvas");
-      cv.width = tall ? 1080 : 1920;
-      cv.height = tall ? 1920 : 1080;
-      const ctx = cv.getContext("2d");
-      if (!ctx) throw new Error("no canvas");
-      const sans = "system-ui, -apple-system, Segoe UI, sans-serif";
-      const mono = "ui-monospace, Menlo, monospace";
-      const left = tall ? 64 : 80;
-      ctx.fillStyle = C.sea;
-      ctx.fillRect(0, 0, cv.width, cv.height);
-      ctx.fillStyle = C.text;
-      ctx.font = `800 ${tall ? 72 : 64}px ${sans}`;
-      ctx.fillText(title.trim() || defaultTitle, left, tall ? 340 : 120);
-      ctx.fillStyle = C.visited;
-      ctx.font = `600 ${tall ? 36 : 34}px ${mono}`;
-      ctx.fillText(t(`${count} ${unitWord} · ${pct}% ${cfg.whole[0]}`, `${count} ${cfg.unit.th} · ${pct}% ${cfg.whole[1]}`), left, tall ? 410 : 180);
-      const names = [...picked].map(labelOf).sort((a, b) => a.localeCompare(b, lang));
-      const nameFont = `500 30px ${sans}`;
-      if (kind === "world") {
-        const mapW = tall ? 1000 : 1560;
-        const mapH = (mapW / W) * H;
-        const mapY = tall ? 470 : 215;
-        ctx.drawImage(img, (cv.width - mapW) / 2, mapY, mapW, mapH);
-        if (tall && count > 0) drawNames(ctx, names, left, mapY + mapH + 90, cv.width - left * 2, cv.height - 340, 3, nameFont);
-      } else if (tall) {
-        // Thailand is tall: map on the left, province list on the right.
-        const mapH = 1090;
-        const mapW = (mapH / H) * W;
-        ctx.drawImage(img, left - 20, 470, mapW, mapH);
-        if (count > 0) drawNames(ctx, names, left + mapW, 500, cv.width - left * 2 - mapW + 20, cv.height - 340, 1, nameFont);
-      } else {
-        const mapH = 820;
-        const mapW = (mapH / H) * W;
-        ctx.drawImage(img, left - 20, 215, mapW, mapH);
-        if (count > 0) drawNames(ctx, names, left + mapW + 40, 270, cv.width - left * 2 - mapW - 40, cv.height - 80, 3, nameFont);
-      }
-      ctx.fillStyle = C.muted;
-      ctx.font = `500 ${tall ? 26 : 24}px ${mono}`;
-      ctx.fillText(SITE_URL, left, tall ? cv.height - 270 : cv.height - 36);
-      URL.revokeObjectURL(url);
-      const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/png"));
-      if (!blob) throw new Error("no image");
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${cfg.file}-${shape}.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      await saveCanvas(await renderMap(input), `${cfg.file}-${theme}-${shape}.png`);
     } finally {
       setBusy(false);
     }
@@ -316,7 +280,7 @@ export function TravelMap({ kind = "world" }: { kind?: MapKind }) {
           {!regions && (
             <p className="tmap__loading muted">{failed ? t("Couldn’t load the map. Refresh to try again.", "โหลดแผนที่ไม่ได้ ลองรีเฟรชอีกครั้ง") : t(cfg.loading[0], cfg.loading[1])}</p>
           )}
-          <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map with ${count} visited ${cfg.unit.many} highlighted`}>
+          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map with ${count} visited ${cfg.unit.many} highlighted`}>
             <rect width={W} height={H} fill={C.sea} />
             {regions?.map((r) => {
               const on = picked.has(r.name);
@@ -335,6 +299,8 @@ export function TravelMap({ kind = "world" }: { kind?: MapKind }) {
             )}
           </svg>
         </div>
+
+        {regions && <StylePicker themes={MAP_THEMES} value={theme} onChange={pickTheme} preview={preview} shape={shape} />}
 
         <div className="tmap__actions">
           <label className="tmap__title">

@@ -13,6 +13,11 @@ export const THEMES: { id: ThemeId; en: string; th: string; icon: string; sw: [s
   { id: "film", en: "Film roll", th: "ฟิล์ม", icon: "🎞️", sw: ["#111111", "#FF8A1F"] },
 ];
 
+// Themes that feature one big photo, so they get a cover picker.
+export function usesCover(theme: ThemeId, shape: Shape) {
+  return theme === "cafe" || (theme === "scrapbook" && shape === "landscape");
+}
+
 export type DumpInput = {
   y: number;
   m: number;
@@ -22,6 +27,7 @@ export type DumpInput = {
   monthYear: string; // "November 2026"
   subtitle: string; // "November 2026 · 6 days"
   photos: Record<number, string>;
+  cover?: string; // the featured photo; defaults to the latest day's
   shape: Shape;
   lang: string;
   site: string;
@@ -37,11 +43,12 @@ type Env = DumpInput & {
   tall: boolean;
   days: number;
   imgs: Map<number, HTMLImageElement>;
+  coverImg?: HTMLImageElement;
   rnd: () => number;
   F: { display: string; body: string; mono: string };
 };
 
-const SAFE = 250;
+export const SAFE = 250;
 const EMOJI = `"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
 
 function loadImg(src: string) {
@@ -54,7 +61,7 @@ function loadImg(src: string) {
 }
 
 // Same picture every time for the same month, so the preview doesn't flicker.
-function seeded(seed: number) {
+export function seeded(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -65,12 +72,12 @@ function seeded(seed: number) {
   };
 }
 
-function fam(v: string, fallback: string) {
+export function fam(v: string, fallback: string) {
   const f = getComputedStyle(document.body).getPropertyValue(v).trim();
   return f ? `${f}, ${fallback}` : fallback;
 }
 
-function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number) {
+export function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
 }
@@ -83,7 +90,7 @@ function cover(ctx: Ctx, img: HTMLImageElement, x: number, y: number, w: number,
 }
 
 // Set the largest font (up to maxPx) at which the text fits maxW.
-function fit(ctx: Ctx, text: string, font: (px: number) => string, maxW: number, maxPx: number) {
+export function fit(ctx: Ctx, text: string, font: (px: number) => string, maxW: number, maxPx: number) {
   ctx.font = font(maxPx);
   const w = ctx.measureText(text).width;
   const px = w > maxW ? Math.floor((maxPx * maxW) / w) : maxPx;
@@ -91,7 +98,7 @@ function fit(ctx: Ctx, text: string, font: (px: number) => string, maxW: number,
   return px;
 }
 
-function emoji(ctx: Ctx, ch: string, x: number, y: number, px: number, rot = 0) {
+export function emoji(ctx: Ctx, ch: string, x: number, y: number, px: number, rot = 0) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rot);
@@ -139,6 +146,7 @@ function site(e: Env, color: string, x: number, y: number, align: CanvasTextAlig
 }
 
 function lastPhoto(e: Env) {
+  if (e.coverImg) return e.coverImg;
   const d = Math.max(0, ...e.imgs.keys());
   return e.imgs.get(d);
 }
@@ -452,7 +460,7 @@ function cafe(e: Env) {
 }
 
 /* ---------- Scrapbook: sky, clouds, a phone-style calendar and polaroids ---------- */
-function cloud(ctx: Ctx, x: number, y: number, s: number) {
+export function cloud(ctx: Ctx, x: number, y: number, s: number) {
   ctx.fillStyle = "rgba(255,255,255,.92)";
   for (const [dx, dy, r] of [
     [0, 0, 1],
@@ -699,6 +707,7 @@ export async function renderDump(input: DumpInput): Promise<HTMLCanvasElement> {
     tall,
     days: new Date(input.y, input.m + 1, 0).getDate(),
     imgs,
+    coverImg: input.cover ? await loadImg(input.cover) : undefined,
     rnd: seeded(input.y * 100 + input.m + input.theme.length * 7919),
     F,
   };

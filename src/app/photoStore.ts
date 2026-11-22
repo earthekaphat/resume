@@ -2,7 +2,8 @@
 const DB = "earth-photo-dump";
 const STORE = "months";
 
-export type MonthDump = { title: string; photos: Record<number, string> };
+// coverDay: which day's photo to feature (0 = the latest); coverSrc: a separate uploaded cover.
+export type MonthDump = { title: string; photos: Record<number, string>; coverDay?: number; coverSrc?: string };
 
 function open(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {

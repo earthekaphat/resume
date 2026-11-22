@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "../i18n";
 import { deleteMonth, loadMonth, saveMonth, shrinkPhoto } from "../photoStore";
-import { renderDump, THEMES, type DumpInput, type ThemeId } from "../dumpThemes";
+import { renderDump, THEMES, usesCover, type DumpInput, type ThemeId } from "../dumpThemes";
+import { saveCanvas, StylePicker, toPreviewUrl } from "./StylePicker";
 import { ShapePicker } from "./TravelMap";
 
 const SITE_URL = "earthekaphat.vercel.app/map";
@@ -27,6 +28,9 @@ export function PhotoDump() {
   const ready = useRef(false);
   const [theme, setTheme] = useState<ThemeId>("midnight");
   const [preview, setPreview] = useState<string | null>(null);
+  const [coverDay, setCoverDay] = useState(0);
+  const [coverSrc, setCoverSrc] = useState("");
+  const coverRef = useRef<HTMLInputElement>(null);
 
   // Start on the current month (after first paint, so the prerendered HTML matches).
   useEffect(() => {
@@ -50,6 +54,8 @@ export function PhotoDump() {
         if (!alive) return;
         setPhotos(d?.photos ?? {});
         setTitle(d?.title ?? "");
+        setCoverDay(d?.coverDay ?? 0);
+        setCoverSrc(d?.coverSrc ?? "");
         ready.current = true;
       })
       .catch(() => {
@@ -64,9 +70,9 @@ export function PhotoDump() {
     if (!ym || !ready.current) return;
     const key = keyOf(ym.y, ym.m);
     // Don't keep a record for months that were only paged through.
-    const empty = !title && Object.keys(photos).length === 0;
-    (empty ? deleteMonth(key) : saveMonth(key, { title, photos })).catch(() => {});
-  }, [ym, title, photos]);
+    const empty = !title && !coverSrc && Object.keys(photos).length === 0;
+    (empty ? deleteMonth(key) : saveMonth(key, { title, photos, coverDay, coverSrc })).catch(() => {});
+  }, [ym, title, photos, coverDay, coverSrc]);
 
   // Everything the image needs, or null before the month is known.
   const input: DumpInput | null = ym
@@ -84,6 +90,7 @@ export function PhotoDump() {
           monthYear,
           subtitle: t(`${monthYear} · ${n} ${n === 1 ? "day" : "days"}`, `${monthYear} · ${n} วัน`),
           photos,
+          cover: coverSrc || photos[coverDay] || undefined,
           shape,
           lang,
           site: SITE_URL,
@@ -91,7 +98,7 @@ export function PhotoDump() {
         };
       })()
     : null;
-  const inputKey = input ? JSON.stringify({ ...input, photos: Object.keys(photos).map((k) => k + photos[Number(k)].length) }) : "";
+  const inputKey = input ? JSON.stringify({ ...input, cover: input.cover?.length, photos: Object.keys(photos).map((k) => k + photos[Number(k)].length) }) : "";
 
   // Redraw the small preview shortly after anything changes.
   useEffect(() => {
@@ -100,11 +107,8 @@ export function PhotoDump() {
     let url: string | null = null;
     const id = window.setTimeout(async () => {
       try {
-        const cv = await renderDump(input);
-        const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/jpeg", 0.8));
-        if (!alive || !blob) return;
-        url = URL.createObjectURL(blob);
-        setPreview(url);
+        url = await toPreviewUrl(await renderDump(input));
+        if (alive && url) setPreview(url);
       } catch {}
     }, 250);
     return () => {
@@ -176,18 +180,22 @@ export function PhotoDump() {
     if (!input) return;
     setBusy(true);
     try {
-      const cv = await renderDump(input);
-      const blob = await new Promise<Blob | null>((res) => cv.toBlob(res, "image/png"));
-      if (!blob) throw new Error("no image");
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${keyOf(y, m)}-dump-${theme}-${shape}.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      await saveCanvas(await renderDump(input), `${keyOf(y, m)}-dump-${theme}-${shape}.png`);
     } finally {
       setBusy(false);
     }
   }
+
+  async function putCover(file: File | undefined) {
+    if (!file) return;
+    setAdding(true);
+    try {
+      setCoverSrc(await shrinkPhoto(file, 720));
+    } finally {
+      setAdding(false);
+    }
+  }
+
 
   return (
     <div className="tcal">
@@ -271,23 +279,44 @@ export function PhotoDump() {
         </div>
         <p className="dump__hint muted">{t("Tap a day to add its photo. Photos stay on this device.", "แตะวันที่เพื่อใส่รูป รูปจะเก็บอยู่ในเครื่องนี้เท่านั้น")}</p>
 
-        <div className="dump__style">
-          <span className="mono muted">{t("Pick a style", "เลือกสไตล์")}</span>
-          <div className="dump__themes" role="radiogroup" aria-label={t("Style", "สไตล์")}>
-            {THEMES.map((x) => (
-              <button key={x.id} type="button" role="radio" aria-checked={theme === x.id} className={theme === x.id ? "is-on" : undefined} onClick={() => pickTheme(x.id)}>
-                <i style={{ background: `linear-gradient(135deg, ${x.sw[0]} 50%, ${x.sw[1]} 50%)` }} aria-hidden>
-                  {x.icon}
-                </i>
-                {t(x.en, x.th)}
-              </button>
-            ))}
-          </div>
-          <figure className={`dump__preview is-${shape}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- a local blob preview */}
-            {preview ? <img key={preview} src={preview} alt={t("Preview of the image", "ตัวอย่างรูป")} /> : <span className="dump__preview-wait" />}
-          </figure>
-        </div>
+        <StylePicker themes={THEMES} value={theme} onChange={pickTheme} preview={preview} shape={shape}>
+          {usesCover(theme, shape) && (
+            <div className="dump__cover">
+              <span className="mono muted">{t("Cover photo", "รูปปก")}</span>
+              <div className="dump__covers" role="radiogroup" aria-label={t("Cover photo", "รูปปก")}>
+                <button type="button" role="radio" aria-checked={!coverSrc && !photos[coverDay]} className={`dump__auto${!coverSrc && !photos[coverDay] ? " is-on" : ""}`} onClick={() => (setCoverSrc(""), setCoverDay(0))}>
+                  {t("Auto", "อัตโนมัติ")}
+                </button>
+                {coverSrc && (
+                  <button type="button" role="radio" aria-checked className="is-on" onClick={() => setCoverSrc("")} aria-label={t("Remove the uploaded cover", "เอารูปปกที่อัปโหลดออก")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
+                    <img src={coverSrc} alt="" />
+                    <span className="dump__cover-x" aria-hidden>
+                      ×
+                    </span>
+                  </button>
+                )}
+                {Object.keys(photos)
+                  .map(Number)
+                  .sort((a, b) => a - b)
+                  .map((d) => {
+                    const on = !coverSrc && coverDay === d;
+                    return (
+                      <button key={d} type="button" role="radio" aria-checked={on} className={on ? "is-on" : undefined} onClick={() => (setCoverSrc(""), setCoverDay(d))} aria-label={t(`Use day ${d} as the cover`, `ใช้รูปวันที่ ${d} เป็นปก`)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
+                        <img src={photos[d]} alt="" />
+                        <span className="dump__cover-day">{d}</span>
+                      </button>
+                    );
+                  })}
+                <button type="button" className="dump__upload" onClick={() => coverRef.current?.click()} disabled={adding}>
+                  {t("＋ Upload", "＋ อัปโหลด")}
+                </button>
+              </div>
+              <input ref={coverRef} id="dump-cover" type="file" accept="image/*" hidden onChange={(e) => (putCover(e.target.files?.[0]), (e.target.value = ""))} />
+            </div>
+          )}
+        </StylePicker>
 
         <div className="tmap__actions">
           <label className="tmap__title">
