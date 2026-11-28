@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { HEAD_CATEGORIES } from "../data/headWords";
 import { useLang } from "../i18n";
 
-// "What's on my head?" — one player holds the phone on their forehead, everyone else
+// "Head Rush" — one player holds the phone on their forehead, everyone else
 // gives clues, and the player guesses as many words as they can before time runs out.
 
 type Clue = "talk" | "act" | "mix";
@@ -70,7 +70,7 @@ function screenUp(beta: number, gamma: number) {
   return Math.cos(beta * r) * Math.cos(gamma * r);
 }
 
-export function HeadGuess({ onExit, initialNames }: { onExit: () => void; initialNames: string[] }) {
+export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; initialNames?: string[] }) {
   const { t, lang } = useLang();
   const [s, setS] = useState<Settings>(DEFAULT);
   const [phase, setPhase] = useState<Phase>("setup");
@@ -436,7 +436,7 @@ export function HeadGuess({ onExit, initialNames }: { onExit: () => void; initia
         </span>
         <div>
           <p className="tile__kicker mono">{t("party · 2–10 players", "ปาร์ตี้ · 2–10 คน")}</p>
-          <h2>{t("What’s on my head?", "อะไรอยู่บนหัว?")}</h2>
+          <h2>{t("Head Rush", "ทายไวบนหัว")}</h2>
           <p className="muted">{t("Phone on your forehead, friends give clues, guess as many as you can.", "แปะมือถือบนหน้าผาก ให้เพื่อนใบ้ แล้วทายให้ได้มากที่สุด")}</p>
         </div>
       </div>

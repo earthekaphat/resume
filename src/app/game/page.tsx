@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { T } from "../i18n";
-import { NumberDuel } from "../components/NumberDuel";
+import { GameTabs } from "../components/GameTabs";
 
 export const metadata: Metadata = {
   title: "Games · Ekaphat",
-  description: "Party and two-player games on one phone: What’s on my head?, Stop at 10.00, Reaction Duel, Mind Duel and Number Bomb.",
+  description: "Two-player and party games on one phone: What am I?, Head Rush, Stop at 10.00, Reaction Duel, Mind Duel and Number Bomb.",
 };
 
 export default function GamePage() {
@@ -19,7 +19,7 @@ export default function GamePage() {
           <T en="Party games on one phone. The app tells you whose turn it is and who to pass the phone to." th="เกมปาร์ตี้เล่นด้วยมือถือเครื่องเดียว แอปจะบอกว่าตาใครและต้องส่งเครื่องให้ใคร" />
         </p>
       </header>
-      <NumberDuel />
+      <GameTabs />
     </main>
   );
 }

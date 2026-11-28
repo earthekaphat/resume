@@ -789,3 +789,36 @@ a.trip:hover .trip__cover img { transform: scale(1.05); }
 .hg-rules li::marker, .hg-steps li::marker { color: var(--accent); font-weight: 700; }
 .hg-screen { scroll-margin-top: 90px; }
 .mode-card--head .mode-art i { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size: 20px; }
+
+/* /game tabs + "What am I?" */
+.gametabs { display: grid; gap: 18px; max-width: 640px; width: 100%; }
+.gametabs__bar { justify-self: start; }
+.mode-card--ask { background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--sky) 24%, transparent), transparent 60%), var(--surface); }
+.mode-card--ask:hover { border-color: var(--sky); }
+.mode-card--head .mode-art i { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size: 20px; }
+.ha-hero { background: linear-gradient(160deg, var(--sky), var(--accent)); box-shadow: 0 12px 30px rgba(90,184,255,.3); }
+.ha-note { margin: 0; font-size: 13px; }
+.ha-step { margin: 0; text-align: center; font-size: 12.5px; }
+.ha-reveal { text-align: center; justify-items: center; padding-block: 28px; }
+.ha-reveal p { margin: 0; }
+.ha-big { margin: 0; font: 800 clamp(38px, 12vw, 64px)/1.05 var(--f-display); color: var(--amber); text-wrap: balance; animation: hgWord .4s cubic-bezier(.3,1.5,.5,1); }
+.ha-tip { font-size: 13.5px; color: var(--muted); max-width: 34ch; }
+.ha-turn { text-align: center; justify-items: center; padding-block: 26px; }
+.ha-turn p { margin: 0; }
+.ha-name { font: 800 clamp(36px, 11vw, 56px)/1.05 var(--f-display); color: var(--accent); animation: pop .4s ease-out; }
+.ha-examples { font-size: 13px; color: var(--sky); max-width: 40ch; }
+.ha-guess { border-color: var(--amber); color: var(--amber); }
+.hg-scores li.is-done { opacity: .55; }
+.ha-who { display: flex; flex-wrap: wrap; gap: 8px; }
+.ha-board { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ha-board li { display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); }
+.ha-board li b { color: var(--amber); text-align: right; }
+.ha-board li.is-me b { color: var(--muted); }
+.ha-win { color: var(--amber); }
+.hg-rank small { font-weight: 500; }
+.ha-solo { grid-template-rows: auto 1fr auto auto; }
+.ha-solo .hg-word span:first-child { font-weight: 700; opacity: 1; }
+.ha-solo__bar { position: relative; z-index: 2; display: flex; gap: 10px; justify-content: center; padding-bottom: 8px; }
+.ha-pill { border: 0; border-radius: 999px; padding: 12px 18px; background: rgba(255,255,255,.14); color: #fff; font: 700 15px/1 var(--f-body); cursor: pointer; }
+.ha-pill.is-ok { background: #3ddc97; color: #062016; }
+.hg-rank .ha-q { font-size: 14px; color: var(--muted); }
