@@ -15,7 +15,8 @@ type Phase = "setup" | "deal" | "play" | "guess" | "board" | "final" | "solo";
 
 const STORE = "earth-ask-settings";
 const MAX_PLAYERS = 10;
-const DEFAULT: Settings = { players: ["", "", ""], cats: ["animals", "jobs", "fantasy"], device: "shared", win: "first" };
+const WAIT = 10; // seconds before a word is shown, so its owner can look away
+const DEFAULT: Settings = { players: ["", "", ""], cats: ["animals"], device: "shared", win: "first" };
 const CAT = new Map(HEAD_CATEGORIES.map((c) => [c.id, c]));
 
 function randomIndex(n: number) {
@@ -52,12 +53,37 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
   const loaded = useRef(false);
   const topRef = useRef<HTMLDivElement>(null);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
+  const [wait, setWait] = useState<{ n: number; who: string | null } | null>(null);
+  const afterWait = useRef<(() => void) | null>(null);
+
+  // Count down, then show the word.
+  useEffect(() => {
+    if (!wait) return;
+    const id = window.setTimeout(() => {
+      if (wait.n > 1) setWait({ ...wait, n: wait.n - 1 });
+      else {
+        setWait(null);
+        try {
+          navigator.vibrate?.(120);
+        } catch {}
+        afterWait.current?.();
+        afterWait.current = null;
+      }
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [wait]);
+
+  // who: the player who must not see it (null = the phone's owner, in own-phone mode).
+  function countdown(who: string | null, then: () => void) {
+    afterWait.current = then;
+    setWait({ n: WAIT, who });
+  }
 
   useEffect(() => {
     const id = window.setTimeout(() => {
       try {
         const saved = JSON.parse(localStorage.getItem(STORE) || "null") as Settings | null;
-        if (saved && Array.isArray(saved.players)) setS({ ...DEFAULT, ...saved, cats: saved.cats.filter((c) => CAT.has(c)) });
+        if (saved && Array.isArray(saved.players)) setS({ ...DEFAULT, ...saved, cats: saved.cats.filter((c) => CAT.has(c)).slice(0, 1) });
       } catch {}
       loaded.current = true;
     }, 0);
@@ -102,6 +128,7 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
       newSolo();
       keepAwake();
       setPhase("solo");
+      countdown(null, () => {});
       return;
     }
     setCards(drawCards(s.cats, n));
@@ -159,9 +186,47 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
   /* ---------- setup helpers ---------- */
 
   const setPlayer = (i: number, v: string) => setS((x) => ({ ...x, players: x.players.map((p, j) => (j === i ? v : p)) }));
-  const toggleCat = (id: string) => setS((x) => ({ ...x, cats: x.cats.includes(id) ? x.cats.filter((c) => c !== id) : [...x.cats, id] }));
+  // One category per game, so everyone's words come from the same topic.
+  const pickCat = (id: string) => setS((x) => ({ ...x, cats: [id] }));
 
   /* ---------- views ---------- */
+
+  if (wait) {
+    return (
+      <div className="hg-stage ha-wait" role="timer" aria-live="polite">
+        <div className="ha-wait__body">
+          <p className="ha-wait__msg">
+            {wait.who
+              ? t(`${wait.who}, look away! 🙈`, `${wait.who} หันหน้าหนีเลย! 🙈`)
+              : t("Put the phone on your forehead, screen facing out 🤳", "ยกมือถือแปะหน้าผาก หันจอออก 🤳")}
+          </p>
+          <div className="ha-wait__ring" style={{ "--p": wait.n / WAIT } as React.CSSProperties}>
+            <span key={wait.n}>{wait.n}</span>
+          </div>
+          <p className="ha-wait__sub">{wait.who ? t("The word shows when the timer hits zero.", "คำจะขึ้นเมื่อนับถึงศูนย์") : t("Your word shows when the timer hits zero.", "คำของคุณจะขึ้นเมื่อนับถึงศูนย์")}</p>
+        </div>
+        <div className="ha-solo__bar">
+          <button type="button" className="ha-pill is-ok" onClick={() => setWait({ ...wait, n: 1 })}>
+            {t("Show now", "โชว์เลย")}
+          </button>
+          <button
+            type="button"
+            className="ha-pill"
+            onClick={() => {
+              afterWait.current = null;
+              setWait(null);
+              if (phase === "solo") {
+                letSleep();
+                setPhase("setup");
+              }
+            }}
+          >
+            {t("Cancel", "ยกเลิก")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // One phone per person: the phone is the card on your forehead.
   if (phase === "solo") {
@@ -179,7 +244,7 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
         </div>
         <div className="ha-solo__bar">
           {soloDone ? (
-            <button type="button" className="ha-pill" onClick={newSolo}>
+            <button type="button" className="ha-pill" onClick={() => (newSolo(), countdown(null, () => {}))}>
               ↻ {t("New word", "คำใหม่")}
             </button>
           ) : (
@@ -238,7 +303,7 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
               {t(", look away!", " หันหน้าไปทางอื่น!")}
             </p>
             <p className="muted">{t(`Everyone else: tap to see ${players[dealIdx]}’s word.`, `คนอื่นแตะเพื่อดูคำบนหัวของ ${players[dealIdx]}`)}</p>
-            <button type="button" className="btn btn--primary" onClick={() => setDealShown(true)}>
+            <button type="button" className="btn btn--primary" onClick={() => countdown(players[dealIdx], () => setDealShown(true))}>
               {t(`Show ${players[dealIdx]}’s word`, `ดูคำของ ${players[dealIdx]}`)}
             </button>
           </div>
@@ -269,7 +334,7 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
             {t(", say your guess out loud!", " พูดคำที่คิดว่าอยู่บนหัวออกมาเลย!")}
           </p>
           {!peek ? (
-            <button type="button" className="btn btn--ghost" onClick={() => setPeek(true)}>
+            <button type="button" className="btn btn--ghost" onClick={() => countdown(players[turn], () => setPeek(true))}>
               {t(`Friends: show the word (don’t look, ${players[turn]}!)`, `เพื่อน: แตะดูคำ (${players[turn]} ห้ามดู!)`)}
             </button>
           ) : (
@@ -489,13 +554,13 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
       {(["basic", "silly"] as const).map((g) => (
         <div key={g} className="game-card">
           <div className="hg-head">
-            <span className="mono muted">{g === "basic" ? t("Basic categories", "หมวดเบสิก") : t("Silly categories", "หมวดฮาๆ กวนๆ")}</span>
+            <span className="mono muted">{g === "basic" ? t("Basic categories · pick one", "หมวดเบสิก · เลือก 1 หมวด") : t("Silly categories · pick one", "หมวดฮาๆ กวนๆ · เลือก 1 หมวด")}</span>
           </div>
           <div className="hg-cats">
             {HEAD_CATEGORIES.filter((c) => c.group === g).map((c) => {
               const on = s.cats.includes(c.id);
               return (
-                <button key={c.id} type="button" className={`hg-catbtn${on ? " is-on" : ""}${g === "silly" ? " is-silly" : ""}`} aria-pressed={on} onClick={() => toggleCat(c.id)}>
+                <button key={c.id} type="button" className={`hg-catbtn${on ? " is-on" : ""}${g === "silly" ? " is-silly" : ""}`} role="radio" aria-checked={on} onClick={() => pickCat(c.id)}>
                   <span className="hg-catbtn__icon" aria-hidden>
                     {c.icon}
                   </span>
@@ -510,7 +575,7 @@ export function HeadAsk({ onExit }: { onExit: () => void }) {
 
       <div className="game-actions hg-start">
         <button type="button" className="btn btn--primary" disabled={!canStart} onClick={start}>
-          {canStart ? (s.device === "own" ? t("Start · show my word", "เริ่ม · โชว์คำของฉัน") : t("Deal the words", "แจกคำ")) : t("Pick at least one category", "เลือกอย่างน้อยหนึ่งหมวด")}
+          {canStart ? (s.device === "own" ? t("Start · show my word", "เริ่ม · โชว์คำของฉัน") : t("Deal the words", "แจกคำ")) : t("Pick a category", "เลือกหมวดก่อน")}
         </button>
         <button type="button" className="btn btn--text" onClick={onExit}>
           {t("Other games", "เกมอื่น")}
