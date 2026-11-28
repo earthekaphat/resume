@@ -2,11 +2,12 @@
 // in one of several looks. Every theme keeps text and photos out of the top and bottom
 // 250px of a story, where Instagram puts its own buttons.
 
-export type ThemeId = "midnight" | "kraft" | "cafe" | "scrapbook" | "film";
+export type ThemeId = "midnight" | "phone" | "kraft" | "cafe" | "scrapbook" | "film";
 export type Shape = "portrait" | "landscape";
 
 export const THEMES: { id: ThemeId; en: string; th: string; icon: string; sw: [string, string] }[] = [
   { id: "midnight", en: "Midnight", th: "มิดไนท์", icon: "🌙", sw: ["#0E151C", "#3DDC97"] },
+  { id: "phone", en: "Phone calendar", th: "ปฏิทินมือถือ", icon: "📱", sw: ["#FFFFFF", "#FF3B30"] },
   { id: "kraft", en: "Kraft paper", th: "กระดาษคราฟท์", icon: "✍️", sw: ["#A8916B", "#FFFFFF"] },
   { id: "cafe", en: "Café", th: "คาเฟ่", icon: "☕", sw: ["#4A2E1C", "#F6ECC4"] },
   { id: "scrapbook", en: "Scrapbook", th: "สแครปบุ๊ก", icon: "🌈", sw: ["#6EC6FF", "#7CC55A"] },
@@ -115,14 +116,14 @@ function weekdays(lang: string, monFirst: boolean, style: "narrow" | "short") {
 }
 
 // Place the month's days in a 7-column grid inside a box.
-function layout(e: Env, r: Rect, o: { gap: number; head: number; monFirst?: boolean; square?: boolean }) {
+function layout(e: Env, r: Rect, o: { gap: number; head: number; monFirst?: boolean; square?: boolean; free?: boolean }) {
   const first = new Date(e.y, e.m, 1).getDay();
   const lead = o.monFirst ? (first + 6) % 7 : first;
   const rows = Math.ceil((lead + e.days) / 7);
   let cw = (r.w - o.gap * 6) / 7;
   let ch = (r.h - o.head - o.gap * (rows - 1)) / rows;
   if (o.square !== false) cw = ch = Math.min(cw, ch);
-  else ch = Math.min(ch, cw);
+  else if (!o.free) ch = Math.min(ch, cw);
   const gw = cw * 7 + o.gap * 6;
   const gh = ch * rows + o.gap * (rows - 1);
   const x0 = r.x + (r.w - gw) / 2;
@@ -197,6 +198,110 @@ function midnight(e: Env) {
     ctx.shadowBlur = 0;
   }
   site(e, "#8D9BAB", tx, tall ? H - SAFE - 20 : H - 60);
+}
+
+/* ---------- Phone calendar: the month view of a phone's calendar app ---------- */
+function phone(e: Env) {
+  const { ctx, W, H, tall, F } = e;
+  const RED = "#FF3B30";
+  const GRAY = "#8E8E93";
+  const LINE = "#E5E5EA";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, W, H);
+  const sys = `-apple-system, "SF Pro Display", ${F.body}`;
+  const L0 = tall ? 44 : 80;
+
+  // Top bar: "‹ 2026" on the left, search and + on the right.
+  const navY = tall ? SAFE + 40 : 90;
+  ctx.fillStyle = RED;
+  ctx.font = `500 ${tall ? 40 : 36}px ${sys}`;
+  ctx.textBaseline = "middle";
+  ctx.fillText(`‹ ${e.y}`, L0, navY);
+  const rx = tall ? W - 44 : 640;
+  ctx.strokeStyle = RED;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.arc(rx - 92, navY - 4, 15, 0, Math.PI * 2);
+  ctx.moveTo(rx - 81, navY + 7);
+  ctx.lineTo(rx - 70, navY + 18);
+  ctx.moveTo(rx - 22, navY);
+  ctx.lineTo(rx + 2, navY);
+  ctx.moveTo(rx - 10, navY - 12);
+  ctx.lineTo(rx - 10, navY + 12);
+  ctx.stroke();
+
+  // Big bold month (or the custom title).
+  const big = e.custom ? e.title : e.monthName;
+  ctx.fillStyle = "#000000";
+  ctx.textBaseline = "alphabetic";
+  fit(ctx, big, (px) => `800 ${px}px ${sys}`, tall ? W - 88 : 560, tall ? 104 : 110);
+  ctx.fillText(big, L0, tall ? SAFE + 175 : 250);
+  if (!tall) {
+    ctx.fillStyle = GRAY;
+    ctx.font = `500 32px ${sys}`;
+    ctx.fillText(e.custom ? e.subtitle : `${e.monthYear} · dump`, L0, 310, 560);
+  }
+
+  const r = tall ? { x: 20, y: SAFE + 230, w: W - 40, h: H - SAFE - 150 - (SAFE + 230) } : { x: 700, y: 60, w: 1160, h: H - 160 };
+  const Lg = layout(e, r, { gap: 0, head: 70, square: false, free: true });
+  // Weekday letters with a hairline under them.
+  ctx.font = `500 ${tall ? 26 : 24}px ${sys}`;
+  ctx.textAlign = "center";
+  weekdays(e.lang, false, "narrow").forEach((w, i) => {
+    ctx.fillStyle = i === 0 || i === 6 ? GRAY : "#3C3C43";
+    ctx.fillText(w, Lg.colX(i), Lg.y0 - 30);
+  });
+  ctx.fillStyle = LINE;
+  ctx.fillRect(r.x, Lg.y0 - 12, r.w, 2);
+
+  const now = new Date();
+  const todayHere = now.getFullYear() === e.y && now.getMonth() === e.m ? now.getDate() : 0;
+  for (let row = 1; row < Lg.rows; row++) ctx.fillRect(r.x, Lg.y0 + row * Lg.ch, r.w, 2);
+  const numPx = Math.round(Math.min(Lg.cw * 0.24, 36));
+  for (const c of Lg.cells) {
+    const cx = c.x + Lg.cw / 2;
+    const ny = c.y + numPx * 0.95;
+    const dow = (new Date(e.y, e.m, c.d).getDay() + 7) % 7;
+    if (c.d === todayHere) {
+      ctx.fillStyle = RED;
+      ctx.beginPath();
+      ctx.arc(cx, ny - numPx * 0.35, numPx * 0.78, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = c.d === todayHere ? "#FFFFFF" : dow === 0 || dow === 6 ? GRAY : "#000000";
+    ctx.font = `${c.d === todayHere ? 700 : 500} ${numPx}px ${sys}`;
+    ctx.fillText(String(c.d), cx, ny);
+    const img = e.imgs.get(c.d);
+    if (img) {
+      const size = Math.min(Lg.cw - 10, Lg.ch - numPx * 1.5 - 10);
+      const px = cx - size / 2;
+      const py = c.y + numPx * 1.5;
+      ctx.save();
+      roundRect(ctx, px, py, size, size, size * 0.2);
+      ctx.clip();
+      cover(ctx, img, px, py, size, size);
+      ctx.restore();
+    }
+  }
+  ctx.textAlign = "left";
+
+  // Bottom toolbar.
+  const barY = tall ? H - SAFE - 60 : H - 50;
+  ctx.fillStyle = LINE;
+  ctx.fillRect(tall ? 0 : r.x, barY - 50, tall ? W : r.w, 2);
+  ctx.fillStyle = RED;
+  ctx.font = `500 ${tall ? 36 : 32}px ${sys}`;
+  ctx.textBaseline = "middle";
+  ctx.fillText(e.lang.startsWith("th") ? "วันนี้" : "Today", tall ? L0 : r.x + 20, barY);
+  ctx.textAlign = "right";
+  ctx.fillText(e.lang.startsWith("th") ? "กล่องเข้า" : "Inbox", tall ? W - L0 : r.x + r.w - 20, barY);
+  ctx.textAlign = "center";
+  ctx.fillStyle = GRAY;
+  ctx.font = `500 ${tall ? 24 : 22}px ${F.mono}`;
+  ctx.fillText(e.site, tall ? W / 2 : r.x + r.w / 2, barY);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 }
 
 /* ---------- Kraft paper: hand-drawn circle around a bold title ---------- */
@@ -683,7 +788,7 @@ function film(e: Env) {
   site(e, "#6E6A64", tx, tall ? H - SAFE - 20 : H - 50);
 }
 
-const DRAW: Record<ThemeId, (e: Env) => void> = { midnight, kraft, cafe, scrapbook, film };
+const DRAW: Record<ThemeId, (e: Env) => void> = { midnight, phone, kraft, cafe, scrapbook, film };
 
 export async function renderDump(input: DumpInput): Promise<HTMLCanvasElement> {
   const tall = input.shape === "portrait";

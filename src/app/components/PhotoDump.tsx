@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "../i18n";
 import { deleteMonth, loadMonth, saveMonth, shrinkPhoto } from "../photoStore";
 import { renderDump, THEMES, usesCover, type DumpInput, type ThemeId } from "../dumpThemes";
+import { PhotoCropper, type CropJob, type CropResult } from "./PhotoCropper";
 import { saveCanvas, StylePicker, toPreviewUrl } from "./StylePicker";
 import { ShapePicker } from "./TravelMap";
 
@@ -31,6 +32,15 @@ export function PhotoDump() {
   const [coverDay, setCoverDay] = useState(0);
   const [coverSrc, setCoverSrc] = useState("");
   const coverRef = useRef<HTMLInputElement>(null);
+  const [cropJob, setCropJob] = useState<CropJob | null>(null);
+  const cropDone = useRef<((r: CropResult) => void) | null>(null);
+
+  // Open the cropper and wait for the person's choice.
+  const askCrop = (job: CropJob) =>
+    new Promise<CropResult>((res) => {
+      cropDone.current = res;
+      setCropJob(job);
+    });
 
   // Start on the current month (after first paint, so the prerendered HTML matches).
   useEffect(() => {
@@ -139,9 +149,11 @@ export function PhotoDump() {
   async function putOne(file: File | undefined) {
     const day = target.current;
     if (!file || day == null) return;
+    const r = await askCrop({ file, size: 480, label: t(`Day ${day}`, `วันที่ ${day}`) });
+    if (r.kind === "discard") return;
     setAdding(true);
     try {
-      const src = await shrinkPhoto(file);
+      const src = r.kind === "crop" ? r.src : await shrinkPhoto(file);
       setPhotos((p) => ({ ...p, [day]: src }));
       setPop(day);
     } finally {
@@ -153,19 +165,34 @@ export function PhotoDump() {
   // otherwise fill the next empty day.
   async function putMany(files: FileList | null) {
     if (!files?.length) return;
-    setAdding(true);
-    try {
-      const next = { ...photos };
-      const queue: File[] = [];
-      for (const f of Array.from(files)) {
-        const d = new Date(f.lastModified);
-        if (d.getFullYear() === y && d.getMonth() === m && !next[d.getDate()]) next[d.getDate()] = await shrinkPhoto(f);
-        else queue.push(f);
+    // Decide each photo's day first, then crop them one by one.
+    const plan: [number, File][] = [];
+    const taken = new Set(Object.keys(photos).map(Number));
+    const queue: File[] = [];
+    for (const f of Array.from(files)) {
+      const d = new Date(f.lastModified);
+      if (d.getFullYear() === y && d.getMonth() === m && !taken.has(d.getDate())) {
+        taken.add(d.getDate());
+        plan.push([d.getDate(), f]);
+      } else queue.push(f);
+    }
+    for (let day = 1; day <= days && queue.length; day++) if (!taken.has(day)) plan.push([day, queue.shift() as File]);
+    plan.sort((a, b) => a[0] - b[0]);
+
+    let auto = false;
+    for (let i = 0; i < plan.length; i++) {
+      const [day, f] = plan[i];
+      const r = auto ? ({ kind: "auto" } as CropResult) : await askCrop({ file: f, size: 480, label: t(`Day ${day}`, `วันที่ ${day}`), step: [i + 1, plan.length] });
+      if (r.kind === "discard") continue;
+      if (r.kind === "autoAll") auto = true;
+      setAdding(true);
+      try {
+        const src = r.kind === "crop" ? r.src : await shrinkPhoto(f);
+        setPhotos((p) => ({ ...p, [day]: src }));
+        setPop(day);
+      } finally {
+        setAdding(false);
       }
-      for (let day = 1; day <= days && queue.length; day++) if (!next[day]) next[day] = await shrinkPhoto(queue.shift() as File);
-      setPhotos(next);
-    } finally {
-      setAdding(false);
     }
   }
 
@@ -188,9 +215,11 @@ export function PhotoDump() {
 
   async function putCover(file: File | undefined) {
     if (!file) return;
+    const r = await askCrop({ file, size: 720, label: t("Cover", "รูปปก") });
+    if (r.kind === "discard") return;
     setAdding(true);
     try {
-      setCoverSrc(await shrinkPhoto(file, 720));
+      setCoverSrc(r.kind === "crop" ? r.src : await shrinkPhoto(file, 720));
     } finally {
       setAdding(false);
     }
@@ -329,6 +358,17 @@ export function PhotoDump() {
           </button>
         </div>
       </div>
+      {cropJob && (
+        <PhotoCropper
+          key={cropJob.file.name + cropJob.label}
+          job={cropJob}
+          onDone={(r) => {
+            setCropJob(null);
+            cropDone.current?.(r);
+            cropDone.current = null;
+          }}
+        />
+      )}
     </div>
   );
 }
