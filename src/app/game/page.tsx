@@ -3,20 +3,20 @@ import { T } from "../i18n";
 import { NumberDuel } from "../components/NumberDuel";
 
 export const metadata: Metadata = {
-  title: "Guess the Number · Ekaphat",
-  description: "Two-player number guessing games on one phone: secret digit duel and number bomb.",
+  title: "Games · Ekaphat",
+  description: "Party and two-player games on one phone: What’s on my head?, Stop at 10.00, Reaction Duel, Mind Duel and Number Bomb.",
 };
 
 export default function GamePage() {
   return (
     <main className="page">
       <header className="page-head">
-        <p className="eyebrow mono">game · 2 players · 1 phone</p>
+        <p className="eyebrow mono">games · 1 phone</p>
         <h1>
-          <T en="Guess the Number" th="เกมหาคนแพ้" />
+          <T en="Find the Loser" th="เกมหาคนแพ้" />
         </h1>
         <p className="muted">
-          <T en="Two players, one phone. When it is time to pick a secret number, the app tells you who to pass the phone to and hides the screen." th="เล่นสองคนด้วยมือถือเครื่องเดียว ตอนต้องแอบเลือกเลข แอปจะบอกว่าต้องส่งเครื่องให้ใคร และซ่อนจอให้" />
+          <T en="Party games on one phone. The app tells you whose turn it is and who to pass the phone to." th="เกมปาร์ตี้เล่นด้วยมือถือเครื่องเดียว แอปจะบอกว่าตาใครและต้องส่งเครื่องให้ใคร" />
         </p>
       </header>
       <NumberDuel />

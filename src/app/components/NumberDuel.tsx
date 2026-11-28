@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "../i18n";
+import { HeadGuess } from "./HeadGuess";
 import { ReactionDuel } from "./ReactionDuel";
 import { StopTen } from "./StopTen";
 
-type Mode = "duel" | "bomb" | "stop" | "react";
+type Mode = "duel" | "bomb" | "stop" | "react" | "head";
 type Hint = "high" | "low" | "hit";
 type Guess = { n: number; res: Hint };
 type Result = { loser: 0 | 1 | null; mode: Mode; detail?: string };
@@ -232,6 +233,16 @@ export function NumberDuel() {
         </div>
 
         <div className="modes">
+          <button type="button" className="mode-card mode-card--head" onClick={() => setMode("head")}>
+            <span className="tile__kicker mono">{t("party · 2–10 players · new", "ปาร์ตี้ · 2–10 คน · ใหม่")}</span>
+            <b>{t("What’s on my head?", "อะไรอยู่บนหัว?")}</b>
+            <span className="muted">{t("Phone on your forehead, friends give clues. Over 1,200 words in 26 categories, from animals to “things with holes”.", "แปะมือถือบนหน้าผาก ให้เพื่อนใบ้ มีมากกว่า 1,200 คำใน 26 หมวด ตั้งแต่สัตว์ไปจนถึง “อะไรมีรู”")}</span>
+            <span className="mode-art mono" aria-hidden>
+              <i>🤳</i>
+              <i>🧀</i>
+              <i>🦨</i>
+            </span>
+          </button>
           <button type="button" className="mode-card mode-card--stop" onClick={() => startQuick("stop")}>
             <span className="tile__kicker mono">{t("quick · new", "เกมสั้น · ใหม่")}</span>
             <b>{t("Stop at 10.00", "หยุดเวลา 10.00")}</b>
@@ -323,6 +334,8 @@ export function NumberDuel() {
       </div>
     );
   }
+
+  if (mode === "head") return <HeadGuess onExit={() => setMode(null)} initialNames={names} />;
 
   if (mode === "stop" || mode === "react") {
     const both: [string, string] = [nameOf(0), nameOf(1)];
