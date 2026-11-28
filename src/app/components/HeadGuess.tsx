@@ -7,15 +7,14 @@ import { useLang } from "../i18n";
 // "Head Rush" — one player holds the phone on their forehead, everyone else
 // gives clues, and the player guesses as many words as they can before time runs out.
 
-type Clue = "talk" | "act" | "mix";
-type Settings = { players: string[]; cats: string[]; seconds: number; rounds: number; clue: Clue; tilt: boolean };
+type Settings = { players: string[]; cats: string[]; seconds: number; tilt: boolean };
 type Card = { cat: string; th: string; en: string };
 type Log = { card: Card; ok: boolean };
 type Phase = "setup" | "handoff" | "countdown" | "play" | "turnEnd" | "final";
 
 const STORE = "earth-head-settings";
 const MAX_PLAYERS = 10;
-const DEFAULT: Settings = { players: ["", ""], cats: ["animals", "food", "holes", "smelly"], seconds: 60, rounds: 1, clue: "talk", tilt: false };
+const DEFAULT: Settings = { players: ["", ""], cats: ["animals"], seconds: 60, tilt: false };
 const CAT = new Map(HEAD_CATEGORIES.map((c) => [c.id, c]));
 
 function randomIndex(n: number) {
@@ -76,13 +75,12 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
   const [phase, setPhase] = useState<Phase>("setup");
   const [deck, setDeck] = useState<Card[]>([]);
   const [pos, setPos] = useState(0);
-  const [turn, setTurn] = useState(0); // 0 .. players*rounds-1
+  const [turn, setTurn] = useState(0); // one turn per player
   const [scores, setScores] = useState<number[]>([]);
   const [log, setLog] = useState<Log[]>([]);
   const [left, setLeft] = useState(0);
   const [count, setCount] = useState(3);
   const [flash, setFlash] = useState<"ok" | "pass" | null>(null);
-  const [turnClue, setTurnClue] = useState<"talk" | "act">("talk");
   const [rules, setRules] = useState(false);
   const loaded = useRef(false);
   const endAt = useRef(0);
@@ -103,7 +101,7 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
       try {
         const saved = JSON.parse(localStorage.getItem(STORE) || "null") as Settings | null;
         if (saved && Array.isArray(saved.players)) {
-          setS({ ...DEFAULT, ...saved, cats: saved.cats.filter((c) => CAT.has(c)) });
+          setS({ players: saved.players, seconds: saved.seconds ?? DEFAULT.seconds, tilt: !!saved.tilt, cats: saved.cats.filter((c) => CAT.has(c)).slice(0, 1) });
         } else if (firstNames.current.some((n) => n.trim())) setS((v) => ({ ...v, players: firstNames.current.slice(0, 2) }));
       } catch {}
       loaded.current = true;
@@ -121,7 +119,7 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
   const players = s.players.map((n, i) => n.trim() || t(`Player ${i + 1}`, `ผู้เล่น ${i + 1}`));
   const n = players.length;
   const who = turn % n;
-  const totalTurns = n * s.rounds;
+  const totalTurns = n;
   const pool = s.cats.reduce((a, c) => a + (CAT.get(c)?.words.length ?? 0), 0);
   const card = deck[pos];
 
@@ -139,7 +137,6 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
 
   function nextTurnSetup() {
     setLog([]);
-    setTurnClue(s.clue === "mix" ? (randomIndex(2) ? "act" : "talk") : s.clue);
     setPhase("handoff");
   }
 
@@ -269,7 +266,8 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
   /* ---------- setup helpers ---------- */
 
   const setPlayer = (i: number, v: string) => setS((x) => ({ ...x, players: x.players.map((p, j) => (j === i ? v : p)) }));
-  const toggleCat = (id: string) => setS((x) => ({ ...x, cats: x.cats.includes(id) ? x.cats.filter((c) => c !== id) : [...x.cats, id] }));
+  // One category per game.
+  const pickCat = (id: string) => setS((x) => ({ ...x, cats: [id] }));
   const word = (c: Card) => (lang === "th" ? c.th : c.en);
   const otherWord = (c: Card) => (lang === "th" ? c.en : c.th);
   const catName = (id: string) => {
@@ -339,14 +337,9 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
           </p>
           <ol className="hg-steps">
             <li>{t("Hold it on your forehead, screen facing your friends. Don’t peek!", "ยกมือถือแปะหน้าผาก หันจอให้เพื่อนเห็น ห้ามแอบดู!")}</li>
-            <li>
-              {turnClue === "act"
-                ? t("Friends: act it out. No talking, no sounds!", "เพื่อน: ใบ้ด้วยท่าทางเท่านั้น ห้ามพูด ห้ามทำเสียง!")
-                : t("Friends: describe it without saying the word or how it sounds.", "เพื่อน: อธิบายใบ้ ห้ามพูดคำนั้นหรือคำที่เสียงคล้าย")}
-            </li>
+            <li>{t("Friends: give clues any way you like, just never say the word itself.", "เพื่อน: ใบ้ยังไงก็ได้ แต่ห้ามพูดคำนั้นตรงๆ")}</li>
             <li>{s.tilt ? t("Got it? Tip your head down. Stuck? Tip it up to pass.", "ทายถูก ก้มหัวลง · ไม่รู้ เงยหัวขึ้นเพื่อผ่าน") : t("Friends tap: right side = got it, left side = pass.", "เพื่อนช่วยแตะ: ขวา = ถูก · ซ้าย = ผ่าน")}</li>
           </ol>
-          <p className={`hg-clue is-${turnClue}`}>{turnClue === "act" ? t("🤐 Acting only this turn", "🤐 ตานี้ใบ้ท่าอย่างเดียว") : t("🗣️ Talking clues this turn", "🗣️ ตานี้ใบ้ด้วยคำพูด")}</p>
           <div className="game-actions">
             <button type="button" className="btn btn--primary" onClick={begin}>
               {t(`I’m ${players[who]}, start ${s.seconds}s`, `ฉันคือ ${players[who]} เริ่ม ${s.seconds} วิ`)}
@@ -447,9 +440,9 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
       {rules && (
         <div className="game-card hg-rules">
           <ol>
-            <li>{t("Add everyone’s name and pick the categories.", "ใส่ชื่อทุกคน แล้วเลือกหมวดคำที่อยากเล่น")}</li>
+            <li>{t("Add everyone’s name and pick one category.", "ใส่ชื่อทุกคน แล้วเลือกหมวดคำ 1 หมวด")}</li>
             <li>{t("On your turn, hold the phone on your forehead with the screen facing out. You can’t see the word, everyone else can.", "ถึงตาใคร ให้แปะมือถือบนหน้าผาก หันจอออก ตัวเองมองไม่เห็นคำ แต่คนอื่นเห็น")}</li>
-            <li>{t("Friends give clues: talking (without saying the word) or acting only, depending on the turn.", "เพื่อนช่วยใบ้ จะเป็นพูดอธิบาย (ห้ามพูดคำนั้น) หรือใบ้ท่าอย่างเดียว แล้วแต่ตา")}</li>
+            <li>{t("Friends give clues any way they like, but never say the word itself.", "เพื่อนช่วยใบ้ยังไงก็ได้ แต่ห้ามพูดคำนั้นตรงๆ")}</li>
             <li>{t("Guess right → tilt down or tap right. Stuck → tilt up or tap left to skip.", "ทายถูก → ก้มลงหรือแตะขวา · ไม่รู้ → เงยขึ้นหรือแตะซ้ายเพื่อข้าม")}</li>
             <li>{t("Each right guess is 1 point. When time runs out, pass the phone on.", "ทายถูกได้ 1 คะแนน หมดเวลาแล้วส่งมือถือให้คนต่อไป")}</li>
             <li>{t("Most points wins 👑, fewest points loses 💀 and gets the punishment.", "คะแนนมากสุดชนะ 👑 น้อยสุดแพ้ 💀 โดนทำโทษ")}</li>
@@ -485,24 +478,13 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
       {(["basic", "silly"] as const).map((g) => (
         <div key={g} className="game-card">
           <div className="hg-head">
-            <span className="mono muted">{g === "basic" ? t("Basic categories", "หมวดเบสิก") : t("Silly categories", "หมวดฮาๆ กวนๆ")}</span>
-            <button
-              type="button"
-              className="btn btn--text"
-              onClick={() => {
-                const ids = HEAD_CATEGORIES.filter((c) => c.group === g).map((c) => c.id);
-                const all = ids.every((id) => s.cats.includes(id));
-                setS((x) => ({ ...x, cats: all ? x.cats.filter((c) => !ids.includes(c)) : [...new Set([...x.cats, ...ids])] }));
-              }}
-            >
-              {HEAD_CATEGORIES.filter((c) => c.group === g).every((c) => s.cats.includes(c.id)) ? t("Clear", "ล้าง") : t("Pick all", "เลือกทั้งหมด")}
-            </button>
+            <span className="mono muted">{g === "basic" ? t("Basic categories · pick one", "หมวดเบสิก · เลือก 1 หมวด") : t("Silly categories · pick one", "หมวดฮาๆ กวนๆ · เลือก 1 หมวด")}</span>
           </div>
           <div className="hg-cats">
             {HEAD_CATEGORIES.filter((c) => c.group === g).map((c) => {
               const on = s.cats.includes(c.id);
               return (
-                <button key={c.id} type="button" className={`hg-catbtn${on ? " is-on" : ""}${g === "silly" ? " is-silly" : ""}`} aria-pressed={on} onClick={() => toggleCat(c.id)}>
+                <button key={c.id} type="button" className={`hg-catbtn${on ? " is-on" : ""}${g === "silly" ? " is-silly" : ""}`} role="radio" aria-checked={on} onClick={() => pickCat(c.id)}>
                   <span className="hg-catbtn__icon" aria-hidden>
                     {c.icon}
                   </span>
@@ -517,17 +499,6 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
 
       <div className="game-card hg-opts">
         <Opt label={t("Time per turn", "เวลาต่อตา")} value={s.seconds} options={[45, 60, 90, 120].map((v) => ({ v, label: t(`${v}s`, `${v} วิ`) }))} onChange={(v) => setS((x) => ({ ...x, seconds: v }))} />
-        <Opt label={t("Turns each", "จำนวนตาต่อคน")} value={s.rounds} options={[1, 2, 3].map((v) => ({ v, label: String(v) }))} onChange={(v) => setS((x) => ({ ...x, rounds: v }))} />
-        <Opt
-          label={t("Clue style", "วิธีใบ้")}
-          value={s.clue}
-          options={[
-            { v: "talk" as Clue, label: t("🗣️ Talk", "🗣️ พูด") },
-            { v: "act" as Clue, label: t("🤐 Act", "🤐 ท่าทาง") },
-            { v: "mix" as Clue, label: t("🎲 Mix", "🎲 สุ่ม") },
-          ]}
-          onChange={(v) => setS((x) => ({ ...x, clue: v }))}
-        />
         <Opt
           label={t("Controls", "การควบคุม")}
           value={s.tilt}
@@ -541,7 +512,7 @@ export function HeadGuess({ onExit, initialNames = [] }: { onExit: () => void; i
 
       <div className="game-actions hg-start">
         <button type="button" className="btn btn--primary" disabled={!canStart} onClick={startGame}>
-          {canStart ? t(`Start · ${pool} words`, `เริ่มเล่น · ${pool} คำ`) : t("Pick at least one category", "เลือกอย่างน้อยหนึ่งหมวด")}
+          {canStart ? t(`Start · ${pool} words`, `เริ่มเล่น · ${pool} คำ`) : t("Pick a category", "เลือกหมวดก่อน")}
         </button>
         <button type="button" className="btn btn--text" onClick={onExit}>
           {t("Other games", "เกมอื่น")}
